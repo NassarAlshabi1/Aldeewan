@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:aldeewan_mobile/domain/entities/person.dart';
 import 'package:aldeewan_mobile/domain/entities/transaction.dart';
 import 'package:aldeewan_mobile/presentation/providers/ledger_provider.dart';
+import 'package:aldeewan_mobile/presentation/providers/currency_provider.dart';
 import 'package:aldeewan_mobile/presentation/widgets/empty_state.dart';
 import 'package:aldeewan_mobile/l10n/generated/app_localizations.dart';
 import 'package:aldeewan_mobile/presentation/widgets/transaction_form.dart';
@@ -83,6 +85,8 @@ class PersonDetailsScreen extends ConsumerWidget {
     final ledgerAsync = ref.watch(ledgerProvider);
     final notifier = ref.read(ledgerProvider.notifier);
     final isSimpleMode = ref.watch(settingsProvider);
+    final currency = ref.watch(currencyProvider);
+    final numberFormat = NumberFormat('#,##0.##');
 
     return ledgerAsync.when(
       loading: () => Scaffold(
@@ -181,7 +185,7 @@ class PersonDetailsScreen extends ConsumerWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              balance.abs().toStringAsFixed(2),
+                              '$currency ${numberFormat.format(balance.abs())}',
                               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                                     color: balanceColor,
                                     fontWeight: FontWeight.bold,
@@ -287,7 +291,7 @@ class PersonDetailsScreen extends ConsumerWidget {
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   Text(
-                                    tx.amount.toStringAsFixed(2),
+                                    '$currency ${numberFormat.format(tx.amount)}',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 16.sp,

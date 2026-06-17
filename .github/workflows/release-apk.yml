@@ -14,7 +14,10 @@ on:
       - 'v*.*.*'
 
 env:
-  FLUTTER_VERSION: '3.44.2'
+  # NOTE: lucide_icons 0.257.0 (latest on pub.dev) extends IconData which became
+  # `final` in Flutter 3.44+. We pin to 3.41.9 (last version that allows subclassing)
+  # until lucide_icons is updated upstream or replaced with lucide_icons_flutter.
+  FLUTTER_VERSION: '3.41.9'
   JAVA_VERSION: '17'
 
 jobs:

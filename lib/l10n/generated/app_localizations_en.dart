@@ -886,6 +886,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noNotifications => 'No notifications yet';
 
   @override
+  String get clearAll => 'Clear all';
+
+  @override
+  String get clearAllConfirmTitle => 'Clear all notifications?';
+
+  @override
+  String get clearAllConfirmMessage => 'This will permanently delete all notifications. This action cannot be undone.';
+
+  @override
+  String get clear => 'Clear';
+
+  @override
+  String get net => 'Net';
+
+  @override
   String get dailyReminder => 'Daily Reminder';
 
   @override

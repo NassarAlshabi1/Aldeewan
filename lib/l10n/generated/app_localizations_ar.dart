@@ -881,6 +881,21 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noNotifications => 'لا توجد إشعارات';
 
   @override
+  String get clearAll => 'مسح الكل';
+
+  @override
+  String get clearAllConfirmTitle => 'مسح جميع الإشعارات؟';
+
+  @override
+  String get clearAllConfirmMessage => 'سيتم حذف جميع الإشعارات نهائياً. لا يمكن التراجع عن هذا الإجراء.';
+
+  @override
+  String get clear => 'مسح';
+
+  @override
+  String get net => 'الصافي';
+
+  @override
   String get dailyReminder => 'تذكير يومي';
 
   @override

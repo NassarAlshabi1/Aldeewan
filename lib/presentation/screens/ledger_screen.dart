@@ -337,15 +337,11 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> with SingleTickerPr
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, s) => Center(child: Text(l10n.errorOccurred(e.toString()))),
         data: (ledgerState) {
-          return Stack(
+          return TabBarView(
+            controller: _tabController,
             children: [
-              TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildPersonList(context, ledgerState.persons, PersonRole.customer, notifier, l10n, currency),
-                  _buildPersonList(context, ledgerState.persons, PersonRole.supplier, notifier, l10n, currency),
-                ],
-              ),
+              _buildPersonList(context, ledgerState.persons, PersonRole.customer, notifier, l10n, currency),
+              _buildPersonList(context, ledgerState.persons, PersonRole.supplier, notifier, l10n, currency),
             ],
           );
         },

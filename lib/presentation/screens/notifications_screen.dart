@@ -31,9 +31,9 @@ class NotificationsScreen extends ConsumerWidget {
           if (notifications.isNotEmpty)
             IconButton(
               icon: const Icon(LucideIcons.trash2),
+              tooltip: l10n.clearAll,
               onPressed: () {
-                // Optional: Confirm clear all
-                notifier.clearAll();
+                _confirmClearAll(context, l10n, notifier);
               },
             ),
         ],
@@ -148,6 +148,34 @@ class NotificationsScreen extends ConsumerWidget {
                 );
               },
             ),
+    );
+  }
+
+  void _confirmClearAll(
+    BuildContext context,
+    AppLocalizations l10n,
+    dynamic notifier,
+  ) {
+    showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.clearAllConfirmTitle),
+        content: Text(l10n.clearAllConfirmMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            onPressed: () {
+              Navigator.of(ctx).pop(true);
+              notifier.clearAll();
+            },
+            child: Text(l10n.clear),
+          ),
+        ],
+      ),
     );
   }
 

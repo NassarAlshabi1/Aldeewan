@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
+import 'package:collection/collection.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:aldeewan_mobile/domain/entities/transaction.dart';
 import 'package:aldeewan_mobile/presentation/providers/ledger_provider.dart';
@@ -369,7 +370,7 @@ class _CashbookScreenState extends ConsumerState<CashbookScreen> {  // REMOVED S
                         ),
                         _buildSummaryItem(
                           context,
-                          label: 'Net',
+                          label: l10n.net,
                           value: net,
                           color: net >= 0 ? AppColors.success : AppColors.error,
                           currency: currency,
@@ -462,11 +463,12 @@ class _CashbookScreenState extends ConsumerState<CashbookScreen> {  // REMOVED S
         
         String? personName;
         if (tx.personId != null) {
-          try {
-            final persons = ledgerAsync.value?.persons ?? [];
-            final person = persons.firstWhere((p) => p.id == tx.personId);
+          final persons = ledgerAsync.value?.persons ?? [];
+          // Use firstWhereOrNull to avoid StateError if the person was deleted.
+          final person = persons.firstWhereOrNull((p) => p.id == tx.personId);
+          if (person != null) {
             personName = person.name;
-          } catch (_) {}
+          }
         }
 
         // Find category

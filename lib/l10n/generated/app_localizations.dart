@@ -1766,6 +1766,36 @@ abstract class AppLocalizations {
   /// **'No notifications yet'**
   String get noNotifications;
 
+  /// No description provided for @clearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all'**
+  String get clearAll;
+
+  /// No description provided for @clearAllConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all notifications?'**
+  String get clearAllConfirmTitle;
+
+  /// No description provided for @clearAllConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This will permanently delete all notifications. This action cannot be undone.'**
+  String get clearAllConfirmMessage;
+
+  /// No description provided for @clear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get clear;
+
+  /// No description provided for @net.
+  ///
+  /// In en, this message translates to:
+  /// **'Net'**
+  String get net;
+
   /// No description provided for @dailyReminder.
   ///
   /// In en, this message translates to:

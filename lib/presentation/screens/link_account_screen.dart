@@ -33,23 +33,14 @@ class _LinkAccountScreenState extends ConsumerState<LinkAccountScreen> {
 
     setState(() => _isLoading = true);
 
+    bool success = false;
     try {
       await ref.read(accountProvider.notifier).linkAccount(
             _selectedProvider,
             _usernameController.text,
             _passwordController.text,
           );
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.accountLinkedSuccess)),
-        );
-        context.pop();
-      } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.authFailed)),
-        );
-      }
+      success = true;
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -57,7 +48,15 @@ class _LinkAccountScreenState extends ConsumerState<LinkAccountScreen> {
         );
       }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.accountLinkedSuccess)),
+          );
+          context.pop();
+        }
+      }
     }
   }
 
