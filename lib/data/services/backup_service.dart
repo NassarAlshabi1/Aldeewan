@@ -288,7 +288,7 @@ class BackupService {
     m['role'] ?? 'customer',
     m['name'] ?? 'Unknown',
     DateTime.tryParse(m['createdAt'] ?? '') ?? DateTime.now(),
-    m['isArchived'] ?? false,
+    isArchived: m['isArchived'] ?? false,
     phone: m['phone'],
   );
 

@@ -33,7 +33,7 @@ extension PersonModelMapper on PersonModel {
       person.role.name,
       person.name,
       person.createdAt,
-      person.isArchived,
+      isArchived: person.isArchived,
       phone: person.phone,
     );
   }
