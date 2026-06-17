@@ -42,10 +42,21 @@ android {
 
     signingConfigs {
         create("release") {
-            keyAlias = keystoreProperties["keyAlias"] as String
-            keyPassword = keystoreProperties["keyPassword"] as String
-            storeFile = file(keystoreProperties["storeFile"] as String)
-            storePassword = keystoreProperties["storePassword"] as String
+            // Only configure release signing when key.properties is present.
+            // When absent (e.g., CI without signing secrets), the release build
+            // falls back to the debug signing config so the build can still succeed.
+            if (keystorePropertiesFile.exists()) {
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+                storeFile = file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+            } else {
+                // Fallback: use the debug keystore so CI can produce an installable APK.
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+                storeFile = rootProject.file("debug.keystore")
+                storePassword = "android"
+            }
         }
     }
 

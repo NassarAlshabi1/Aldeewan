@@ -1,0 +1,211 @@
+name: Build & Release APK
+
+# يُشغَّل هذا الـ workflow يدوياً أو تلقائياً عند إنشاء tag بنمط v*.*.*
+# مثال: git tag v2.3.0 && git push origin v2.3.0
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'رقم الإصدار (مثال: v2.3.0) — يُستخدم فقط في تسمية الـ Release عند التشغيل اليدوي'
+        required: false
+        default: ''
+  push:
+    tags:
+      - 'v*.*.*'
+
+env:
+  FLUTTER_VERSION: '3.44.2'
+  JAVA_VERSION: '17'
+
+jobs:
+  build-release-apk:
+    name: Build Release APK
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # مطلوب لإنشاء GitHub Release ورفع الأصول
+      packages: write
+
+    steps:
+      ############################################################
+      # 1) استخراج الكود
+      ############################################################
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # مطلوب لقراءة التاريخ وآخر tag
+
+      ############################################################
+      # 2) إعداد Java + Flutter
+      ############################################################
+      - name: ☕ Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: 🐦 Set up Flutter ${{ env.FLUTTER_VERSION }}
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: 🔍 Verify Flutter installation
+        run: |
+          flutter --version
+          dart --version
+
+      ############################################################
+      # 3) إعداد ملف .env (مطلوب كأصل في pubspec.yaml)
+      ############################################################
+      - name: 🔐 Create .env file
+        run: |
+          # إذا لم يُحدد سر REALM_ENCRYPTION_KEY نولّد مفتاحاً عشوائياً 64-byte hex
+          if [ -n "${{ secrets.REALM_ENCRYPTION_KEY }}" ]; then
+            echo "REALM_ENCRYPTION_KEY=${{ secrets.REALM_ENCRYPTION_KEY }}" > .env
+            echo "✅ Using REALM_ENCRYPTION_KEY from repository secrets"
+          else
+            RANDOM_KEY=$(openssl rand -hex 64)
+            echo "REALM_ENCRYPTION_KEY=$RANDOM_KEY" > .env
+            echo "⚠️  REALM_ENCRYPTION_KEY not set in secrets — generated ephemeral key"
+            echo "    NOTE: APK built with this key CANNOT read existing Realm databases."
+            echo "    Set the secret in repo settings for production releases."
+          fi
+          # تحقق من المحتوى دون كشف المفتاح
+          echo "env file size: $(wc -c < .env) bytes"
+
+      ############################################################
+      # 4) إعداد توقيع APK (اختياري عبر GitHub Secrets)
+      ############################################################
+      - name: 🔑 Configure release signing
+        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          echo "🔑 Decoding release keystore from secrets..."
+          echo "$KEYSTORE_BASE64" | base64 -d > android/app/release.keystore
+          cat > android/key.properties <<EOF
+          storeFile=release.keystore
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          EOF
+          echo "✅ key.properties created"
+
+      - name: 🛠️ Generate fallback debug keystore (when no signing secrets)
+        if: ${{ secrets.KEYSTORE_BASE64 == '' }}
+        run: |
+          echo "⚠️  No signing secrets provided — generating a debug keystore for installable APK"
+          if [ ! -f android/debug.keystore ]; then
+            keytool -genkey -v -keystore android/debug.keystore \
+              -storepass android -alias androiddebugkey -keypass android \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US"
+          fi
+          echo "✅ Debug keystore ready"
+
+      ############################################################
+      # 5) تثبيت dependencies وتوليد الكود
+      ############################################################
+      - name: 📦 flutter pub get
+        run: flutter pub get
+
+      - name: 🧬 Generate code (build_runner)
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      ############################################################
+      # 6) البناء
+      ############################################################
+      - name: 🏗️ Build release APK
+        run: flutter build apk --release --no-tree-shake-icons
+
+      - name: 📋 List built APKs
+        run: |
+          ls -lh build/app/outputs/flutter-apk/
+          echo "---"
+          find build/app/outputs/flutter-apk -name "*.apk" -print
+
+      ############################################################
+      # 7) إعادة تسمية APK باسم الإصدار
+      ############################################################
+      - name: 🏷️ Rename APK with version
+        id: rename
+        run: |
+          # حدد رقم الإصدار: من tag إن وُجد، وإلا من الإدخال اليدوي، وإلا من pubspec
+          if [ -n "${{ github.ref_name }}" ] && [[ "${{ github.ref_name }}" == v* ]]; then
+            VERSION="${{ github.ref_name }}"
+          elif [ -n "${{ github.event.inputs.release_tag }}" ]; then
+            VERSION="${{ github.event.inputs.release_tag }}"
+          else
+            VERSION="v$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d '+' -f 1)"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          SOURCE_APK="build/app/outputs/flutter-apk/app-release.apk"
+          TARGET_APK="build/app/outputs/flutter-apk/Aldeewan-${VERSION}.apk"
+          cp "$SOURCE_APK" "$TARGET_APK"
+          echo "apk_path=$TARGET_APK" >> $GITHUB_OUTPUT
+          echo "apk_name=Aldeewan-${VERSION}.apk" >> $GITHUB_OUTPUT
+          ls -lh "$TARGET_APK"
+
+      ############################################################
+      # 8) رفع الـ APK كـ artifact (دائماً)
+      ############################################################
+      - name: 📤 Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Aldeewan-${{ steps.rename.outputs.version }}-apk
+          path: ${{ steps.rename.outputs.apk_path }}
+          retention-days: 30
+          if-no-files-found: error
+
+      ############################################################
+      # 9) توليد ملاحظات الإصدار تلقائياً
+      ############################################################
+      - name: 📝 Generate release notes
+        id: notes
+        run: |
+          # احصل على آخر tag سابق لاستخدامه في حدود الـ changelog
+          PREV_TAG=$(git describe --tags --abbrev=0 ${{ github.ref_name }}^ 2>/dev/null || echo "")
+          if [ -n "$PREV_TAG" ]; then
+            echo "## التغييرات منذ $PREV_TAG" > release_notes.md
+            echo "" >> release_notes.md
+            git log --pretty=format:"- %s (%h)" "${PREV_TAG}..HEAD" >> release_notes.md 2>/dev/null || true
+          else
+            echo "## التغييرات" > release_notes.md
+            echo "" >> release_notes.md
+            git log --pretty=format:"- %s (%h)" -20 >> release_notes.md
+          fi
+          echo "" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "---" >> release_notes.md
+          echo "📦 **APK:** \`${{ steps.rename.outputs.apk_name }}\`" >> release_notes.md
+          echo "🏗️ **Flutter:** ${{ env.FLUTTER_VERSION }} | **Java:** ${{ env.JAVA_VERSION }}" >> release_notes.md
+          echo "🔑 **Signing:** $([ -f android/key.properties ] && echo 'Production keystore' || echo 'Debug keystore (fallback)')" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "### خطوات التثبيت" >> release_notes.md
+          echo "1. حمّل ملف \`${{ steps.rename.outputs.apk_name }}\`" >> release_notes.md
+          echo "2. فعّل \"تثبيت تطبيقات من مصادر غير معروفة\" في إعدادات الأندرويد" >> release_notes.md
+          echo "3. افتح ملف APK واتبع خطوات التثبيت" >> release_notes.md
+          echo "release_notes_path=release_notes.md" >> $GITHUB_OUTPUT
+          cat release_notes.md
+
+      ############################################################
+      # 10) إنشاء GitHub Release (فقط عند tag أو إدخال يدوي)
+      ############################################################
+      - name: 🚀 Create GitHub Release
+        if: ${{ startsWith(github.ref, 'refs/tags/v') || github.event.inputs.release_tag != '' }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.rename.outputs.version }}
+          name: "Aldeewan ${{ steps.rename.outputs.version }}"
+          body_path: ${{ steps.notes.outputs.release_notes_path }}
+          files: ${{ steps.rename.outputs.apk_path }}
+          draft: false
+          prerelease: false
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

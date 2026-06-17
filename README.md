@@ -154,6 +154,38 @@ lib/
 
 ---
 
+## 🚀 بناء وإصدار APK عبر GitHub Actions
+
+يحتوي المشروع على workflow جاهز لبناء APK موقّع وإصداره تلقائياً:
+`.github/workflows/release-apk.yml`
+
+### طرق التشغيل
+- **تلقائي عند إنشاء tag:** بمجرد دفع tag بنمط `v*.*.*` يبدأ البناء ويُصدر GitHub Release تلقائياً.
+  ```bash
+  git tag v2.3.0
+  git push origin v2.3.0
+  ```
+- **يدوي (workflow_dispatch):** من تبويب Actions في المستودع → اختر "Build & Release APK" → Run workflow.
+
+### أسرار المستودع (Repository Secrets) المطلوبة
+للحصول على إصدار موقّع بشهادة إنتاج، أضف الأسرار التالية في **Settings → Secrets and variables → Actions**:
+
+| السر | الوصف |
+|------|-------|
+| `REALM_ENCRYPTION_KEY` | مفتاح تشفير Realm (64 بايت hex). يُولّد مفتاح مؤقت إذا غاب. |
+| `KEYSTORE_BASE64` | ملف keystore بصيغة base64: `base64 -i release.keystore -o keystore.b64` |
+| `KEY_ALIAS` | اسم المفتاح داخل keystore |
+| `KEY_PASSWORD` | كلمة مرور المفتاح |
+| `KEYSTORE_PASSWORD` | كلمة مرور ملف keystore |
+
+> ⚠️ إذا غابت أسرار التوقيع، سيبني الـ workflow APK موقّعاً بـ debug keystore (قابل للتثبيت لكن غير صالح للنشر على Play Store).
+
+### ناتج البناء
+- **Artifact:** يُرفع APK في تبويب Artifacts لكل تشغيل (يُحفظ 30 يوماً).
+- **Release:** عند التشغيل عبر tag، يُنشأ GitHub Release تلقائياً مع APK وملاحظات مستمدة من git log.
+
+---
+
 ## 📄 الرخصة
 
 هذا المشروع مرخص بموجب رخصة [MIT](LICENSE).
