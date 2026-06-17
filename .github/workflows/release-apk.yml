@@ -121,6 +121,75 @@ jobs:
         run: dart run build_runner build --delete-conflicting-outputs
 
       ############################################################
+      # 5.5) ضغط الصور (يقلل حجم APK)
+      ############################################################
+      - name: 🗜️ Install Pillow + compress images
+        run: |
+          python3 -m pip install --quiet --user Pillow
+          python3 - <<'PYEOF'
+          import os
+          from pathlib import Path
+          from PIL import Image
+
+          REPO = Path(os.getcwd())
+          IMAGE_DIRS = [
+              "assets/images",
+              "ios/Runner/Assets.xcassets/AppIcon.appiconset",
+              "android/app/src/main/res/mipmap-hdpi",
+              "android/app/src/main/res/mipmap-mdpi",
+              "android/app/src/main/res/mipmap-xhdpi",
+              "android/app/src/main/res/mipmap-xxhdpi",
+              "android/app/src/main/res/mipmap-xxxhdpi",
+              "macos/Runner/Assets.xcassets/AppIcon.appiconset",
+              "web/icons",
+          ]
+          total_orig = 0
+          total_new = 0
+          files = 0
+          for d in IMAGE_DIRS:
+              p = REPO / d
+              if not p.exists():
+                  continue
+              for png in sorted(p.glob("*.png")):
+                  orig = png.stat().st_size
+                  if orig < 1024:
+                      continue
+                  try:
+                      with Image.open(png) as img:
+                          has_alpha = False
+                          if img.mode in ('RGBA', 'LA'):
+                              alpha = img.getchannel('A')
+                              has_alpha = alpha.getextrema()[0] < 255
+                          elif img.mode == 'P' and 'transparency' in img.info:
+                              has_alpha = True
+                          if has_alpha:
+                              p_img = img.convert('RGBA')
+                          else:
+                              p_img = img.convert('RGB').quantize(
+                                  colors=256,
+                                  method=Image.Quantize.MEDIANCUT,
+                                  dither=Image.Dither.FLOYDSTEINBERG,
+                              )
+                          tmp = png.with_suffix('.tmp.png')
+                          p_img.save(tmp, format='PNG', optimize=True, compress_level=9)
+                          new = tmp.stat().st_size
+                          if new < orig:
+                              os.replace(tmp, png)
+                              total_orig += orig
+                              total_new += new
+                              files += 1
+                              print(f"  ✅ {png.relative_to(REPO)}  {orig/1024:.1f}KB → {new/1024:.1f}KB")
+                          else:
+                              tmp.unlink(missing_ok=True)
+                  except Exception as e:
+                      print(f"  ⚠️  {png}: {e}")
+
+          saved = total_orig - total_new
+          pct = (saved / total_orig * 100) if total_orig > 0 else 0
+          print(f"\n📊 Compressed {files} files: {total_orig/1024:.1f}KB → {total_new/1024:.1f}KB (saved {pct:.1f}%)")
+          PYEOF
+
+      ############################################################
       # 6) البناء — arm64-v8a فقط (الأجهزة الحديثة 64-bit)
       ############################################################
       # الأجهزة الحديثة (من 2017+) تستخدم معمارية arm64-v8a (64-bit ARM).
