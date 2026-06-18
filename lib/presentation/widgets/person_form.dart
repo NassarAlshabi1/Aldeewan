@@ -204,8 +204,8 @@ class _PersonFormState extends ConsumerState<PersonForm> {
                     Expanded(
                       child: Text(
                         _currencyCode == null
-                            ? '${currencyInfo.name} (${l10n.appDefault})'
-                            : currencyInfo.name,
+                            ? '${currencyInfo.nameEn} (${l10n.appDefault})'
+                            : currencyInfo.nameEn,
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ),
