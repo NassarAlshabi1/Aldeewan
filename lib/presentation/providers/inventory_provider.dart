@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 
 import 'package:aldeewan_mobile/data/datasources/local_database_source.dart';
 import 'package:aldeewan_mobile/data/models/product_model.dart';
+import 'package:aldeewan_mobile/data/models/stock_movement_model.dart';
 import 'package:aldeewan_mobile/domain/entities/product.dart';
 import 'package:aldeewan_mobile/presentation/providers/dependency_injection.dart';
 
@@ -83,14 +84,9 @@ class InventoryNotifier extends StateNotifier<InventoryState> {
       // Pre-aggregate quantity on hand per product (single pass).
       final Map<String, double> qtyByProduct = {};
       for (final m in movements) {
-        final type = StockMovementType.values.firstWhere(
-          (e) => e.name == m.type,
-          orElse: () => StockMovementType.inbound,
-        );
-        final delta = (type == StockMovementType.inbound ||
-                type == StockMovementType.adjustmentIn)
-            ? m.quantity
-            : -m.quantity;
+        // Local string compare (no enum import).
+        final isInbound = m.type == 'inbound' || m.type == 'adjustmentIn';
+        final delta = isInbound ? m.quantity : -m.quantity;
         qtyByProduct[m.productId] = (qtyByProduct[m.productId] ?? 0) + delta;
       }
 
@@ -115,13 +111,13 @@ class InventoryNotifier extends StateNotifier<InventoryState> {
   // --- Mutations ---
 
   Future<void> addProduct(Product product) async {
-    final model = ProductModel.fromEntity(product);
+    final model = productModelFromEntity(product);
     await _dataSource.putProduct(model);
   }
 
   Future<void> updateProduct(Product product) async {
     final updated = product.copyWith(updatedAt: DateTime.now());
-    await _dataSource.putProduct(ProductModel.fromEntity(updated));
+    await _dataSource.putProduct(productModelFromEntity(updated));
   }
 
   Future<void> archiveProduct(String productId) async {
@@ -133,7 +129,7 @@ class InventoryNotifier extends StateNotifier<InventoryState> {
   }
 
   Future<void> addStockMovement(StockMovement movement) async {
-    await _dataSource.putStockMovement(StockMovementModel.fromEntity(movement));
+    await _dataSource.putStockMovement(stockMovementModelFromEntity(movement));
   }
 
   Future<void> deleteStockMovement(String movementId) async {

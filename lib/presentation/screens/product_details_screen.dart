@@ -44,7 +44,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
     final qoh = await ds.getQuantityOnHand(widget.productId);
     if (!mounted) return;
     setState(() {
-      _movements = models.map((m) => m.toEntity()).toList();
+      _movements = models.map<StockMovement>((m) => m.toEntity()).toList();
       _quantityOnHand = qoh;
       _loadingMovements = false;
     });

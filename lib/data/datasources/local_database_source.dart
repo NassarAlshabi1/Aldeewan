@@ -12,6 +12,8 @@ import 'package:aldeewan_mobile/data/models/savings_goal_model.dart';
 import 'package:aldeewan_mobile/data/models/category_model.dart';
 import 'package:aldeewan_mobile/data/models/notification_item_model.dart';
 import 'package:aldeewan_mobile/data/models/product_model.dart';
+import 'package:aldeewan_mobile/data/models/stock_movement_model.dart';
+import 'package:aldeewan_mobile/domain/entities/product.dart';
 
 class LocalDatabaseSource {
   late Future<Realm> db;
@@ -306,6 +308,15 @@ class LocalDatabaseSource {
         .map((results) => results.results.toList());
   }
 
+  /// Returns ALL stock movements (sorted by date desc). Used by the
+  /// InventoryProvider to pre-aggregate quantities on hand in a single pass.
+  Future<List<StockMovementModel>> getStockMovements() async {
+    final realm = await db;
+    return realm
+        .query<StockMovementModel>("TRUEPREDICATE SORT(date DESC)")
+        .toList();
+  }
+
   Future<List<StockMovementModel>> getStockMovementsByProduct(
     String productId,
   ) async {
@@ -357,20 +368,10 @@ class LocalDatabaseSource {
         .toList();
     double sum = 0;
     for (final m in movements) {
-      final type = StockMovementType.values.firstWhere(
-        (e) => e.name == m.type,
-        orElse: () => StockMovementType.inbound,
-      );
-      switch (type) {
-        case StockMovementType.inbound:
-        case StockMovementType.adjustmentIn:
-          sum += m.quantity;
-          break;
-        case StockMovementType.outbound:
-        case StockMovementType.adjustmentOut:
-          sum -= m.quantity;
-          break;
-      }
+      // Local string compare avoids importing the enum (which would
+      // create a circular dependency with the entity layer).
+      final isInbound = m.type == 'inbound' || m.type == 'adjustmentIn';
+      sum += isInbound ? m.quantity : -m.quantity;
     }
     return sum;
   }
