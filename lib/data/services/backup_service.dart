@@ -290,7 +290,7 @@ class BackupService {
     m['role'] ?? 'customer',
     m['name'] ?? 'Unknown',
     DateTime.tryParse(m['createdAt'] ?? '') ?? DateTime.now(),
-    isArchived: m['isArchived'] ?? false,
+    m['isArchived'] ?? false,
     phone: m['phone'],
     currencyCode: m['currencyCode'],
   );
