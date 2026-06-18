@@ -251,6 +251,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get exportCsv => 'تصدير CSV';
 
   @override
+  String get exportPdf => 'تصدير PDF';
+
+  @override
   String get debt => 'دين (لنا)';
 
   @override

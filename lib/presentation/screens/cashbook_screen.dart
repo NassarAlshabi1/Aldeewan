@@ -380,6 +380,35 @@ class _CashbookScreenState extends ConsumerState<CashbookScreen> {  // REMOVED S
                     ),
                   ),
                 ),
+                // Mixed-currency indicator: shows when the current list
+                // contains at least one transaction whose currency differs
+                // from the app default. The summary above sums raw amounts
+                // across currencies, so we flag it as an estimate.
+                if (filteredTransactions.any(
+                  (t) => t.currencyCode != null && t.currencyCode != currency,
+                ))
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          size: 12,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            l10n.mixedTotalNote,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontSize: 10,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 SizedBox(height: 8.h),
                 // Filter transactions tip
                 const FilterTransactionsTip(),

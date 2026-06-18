@@ -130,16 +130,25 @@ class _PersonStatementReportState extends ConsumerState<PersonStatementReport> {
                     itemCount: _statementTransactions.length,
                     itemBuilder: (context, index) {
                       final tx = _statementTransactions[index];
+                      // Use the transaction's currency if set (inherited
+                      // from the person at creation time); fall back to
+                      // the person's currency; finally to the app default.
+                      final effectiveCurrency = tx.currencyCode ??
+                          _selectedPerson?.currencyCode ??
+                          currency;
                       return ListTile(
                         title: Text(TransactionLabelMapper.getLabel(tx.type, isSimpleMode, l10n)),
                         subtitle: Text(DateFormatterService.formatDate(tx.date, locale)),
-                        trailing: Text('$currency ${formatter.format(tx.amount)}'),
+                        trailing: Text('$effectiveCurrency ${formatter.format(tx.amount)}'),
                       );
                     },
                   ),
                   const Divider(),
                   _buildSummaryRow(
-                      l10n.closingBalance, _calculateClosingBalance(), currency, formatter),
+                      l10n.closingBalance,
+                      _calculateClosingBalance(),
+                      _selectedPerson?.currencyCode ?? currency,
+                      formatter),
                   SizedBox(height: 8.h),
                   _buildNetPositionRow(context, _calculateClosingBalance(), l10n),
                   SizedBox(height: 24.h),

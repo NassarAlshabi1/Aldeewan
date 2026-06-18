@@ -261,16 +261,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             SettingsSection(
               title: l10n.general,
               children: [
-                // Inventory tile — opens the inventory screen
-                SettingsTile(
-                  icon: LucideIcons.package,
-                  iconColor: Colors.indigo,
-                  title: l10n.inventory,
-                  subtitle: l10n.inventorySubtitle,
-                  trailing: Icon(LucideIcons.chevronRight, size: 20.sp, color: theme.colorScheme.onSurfaceVariant),
-                  onTap: () => context.push('/inventory'),
-                ),
-                const Divider(height: 1, indent: 60),
                 SettingsTile(
                   icon: LucideIcons.banknote,
                   iconColor: Colors.green,

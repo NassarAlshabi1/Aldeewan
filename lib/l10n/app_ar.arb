@@ -80,6 +80,7 @@
   "balanceBroughtForward": "الرصيد المرحل",
   "closingBalance": "الرصيد الختامي",
   "exportCsv": "تصدير CSV",
+  "exportPdf": "تصدير PDF",
   "debt": "دين (لنا)",
   "payment": "دفعة",
   "credit": "دين (علينا)",

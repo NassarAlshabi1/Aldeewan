@@ -14,6 +14,8 @@ import 'package:aldeewan_mobile/presentation/providers/settings_provider.dart';
 import 'package:aldeewan_mobile/utils/transaction_label_mapper.dart';
 import 'package:aldeewan_mobile/data/services/sound_service.dart';
 import 'package:aldeewan_mobile/presentation/providers/home_provider.dart';
+import 'package:aldeewan_mobile/domain/entities/product.dart';
+import 'package:aldeewan_mobile/presentation/providers/inventory_provider.dart';
 
 import 'package:aldeewan_mobile/domain/entities/person.dart';
 
@@ -53,6 +55,13 @@ class _TransactionFormState extends ConsumerState<TransactionForm> {
   late DateTime _date;
   bool _isOpeningBalance = false;
 
+  /// Optional: when the transaction is a sale (saleOnCredit or cashSale)
+  /// the user can link it to a product from the inventory. Selecting a
+  /// product auto-creates an outbound StockMovement on save, reducing
+  /// the product's quantity on hand by [_stockQuantity].
+  String? _linkedProductId;
+  double _stockQuantity = 1;
+
   @override
   void initState() {
     super.initState();
@@ -60,10 +69,10 @@ class _TransactionFormState extends ConsumerState<TransactionForm> {
       text: widget.initialAmount != null ? widget.initialAmount.toString() : ''
     );
     _noteController = TextEditingController(text: widget.initialNote ?? '');
-    _type = widget.initialType ?? (widget.personRole == PersonRole.customer 
-        ? TransactionType.saleOnCredit 
-        : (widget.personRole == PersonRole.supplier 
-            ? TransactionType.purchaseOnCredit 
+    _type = widget.initialType ?? (widget.personRole == PersonRole.customer
+        ? TransactionType.saleOnCredit
+        : (widget.personRole == PersonRole.supplier
+            ? TransactionType.purchaseOnCredit
             : TransactionType.saleOnCredit));
     _date = widget.initialDate ?? DateTime.now();
     // defaulting _isOpeningBalance to false
@@ -126,6 +135,47 @@ class _TransactionFormState extends ConsumerState<TransactionForm> {
         currencyCode: widget.currencyCode ?? ref.read(currencyProvider),
       );
       widget.onSave(transaction);
+
+      // If the user linked this sale to a product, auto-create an
+      // outbound StockMovement that reduces the product's quantity on
+      // hand. Only applies to sale types (cashSale, saleOnCredit).
+      if (_linkedProductId != null &&
+          (_type == TransactionType.saleOnCredit ||
+              _type == TransactionType.cashSale)) {
+        final inventoryState = ref.read(inventoryProvider);
+        final linked = inventoryState.products
+            .where((p) => p.product.id == _linkedProductId)
+            .firstOrNull;
+        if (linked != null) {
+          // Validate stock availability for the requested quantity.
+          if (_stockQuantity > linked.quantityOnHand) {
+            if (mounted) {
+              ToastService.showError(
+                context,
+                l10n.insufficientStock(
+                  linked.quantityOnHand.toStringAsFixed(2),
+                  linked.product.unit ?? '',
+                ),
+              );
+            }
+            return;
+          }
+          final movement = StockMovement(
+            id: generateInventoryId(),
+            productId: linked.product.id,
+            type: StockMovementType.outbound,
+            quantity: _stockQuantity,
+            unitCost: linked.product.costPrice,
+            personId: widget.personId,
+            transactionId: transaction.id,
+            date: _date,
+            note: transaction.note,
+            createdAt: DateTime.now(),
+          );
+          await ref.read(inventoryProvider.notifier).addStockMovement(movement);
+        }
+      }
+
       HapticFeedback.lightImpact();
       ToastService.showSuccess(context, l10n.savedSuccessfully);
       Navigator.of(context).pop();
@@ -319,6 +369,15 @@ class _TransactionFormState extends ConsumerState<TransactionForm> {
                   border: const OutlineInputBorder(),
                 ),
               ),
+              // Link-to-product picker — only shown for sale transactions.
+              // When the user picks a product and quantity, an outbound
+              // StockMovement is auto-created on save, reducing that
+              // product's quantity on hand.
+              if (_type == TransactionType.saleOnCredit ||
+                  _type == TransactionType.cashSale) ...[
+                SizedBox(height: 12.h),
+                _buildProductLinkRow(context, l10n),
+              ],
               SizedBox(height: 24.h),
               ElevatedButton(
                 onPressed: () => _save(l10n),
@@ -329,6 +388,137 @@ class _TransactionFormState extends ConsumerState<TransactionForm> {
           ),
         ),
       ),
+    );
+  }
+
+  /// Builds a row that lets the user optionally link this sale to a
+  /// product from the inventory. Shows the product's current quantity
+  /// on hand and a numeric input for the quantity being sold.
+  Widget _buildProductLinkRow(BuildContext context, AppLocalizations l10n) {
+    final theme = Theme.of(context);
+    final inventoryState = ref.watch(inventoryProvider);
+    final products = inventoryState.products;
+
+    // Find the currently selected product (if any).
+    final selected = _linkedProductId == null
+        ? null
+        : products.where((p) => p.product.id == _linkedProductId).firstOrNull;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        InkWell(
+          onTap: products.isEmpty
+              ? null
+              : () async {
+                  final picked = await showModalBottomSheet<String?>(
+                    context: context,
+                    isScrollControlled: true,
+                    builder: (ctx) {
+                      return DraggableScrollableSheet(
+                        initialChildSize: 0.7,
+                        minChildSize: 0.4,
+                        maxChildSize: 0.95,
+                        expand: false,
+                        builder: (ctx, scrollController) => Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Text(
+                                l10n.product,
+                                style: theme.textTheme.titleLarge,
+                              ),
+                            ),
+                            Expanded(
+                              child: ListView.builder(
+                                controller: scrollController,
+                                itemCount: products.length,
+                                itemBuilder: (ctx, index) {
+                                  final item = products[index];
+                                  return ListTile(
+                                    leading: const Icon(LucideIcons.package),
+                                    title: Text(item.product.name),
+                                    subtitle: Text(
+                                      '${l10n.quantityOnHand}: '
+                                      '${item.quantityOnHand.toStringAsFixed(2)}'
+                                      '${item.product.unit != null ? " ${item.product.unit}" : ""}',
+                                    ),
+                                    trailing: item.product.salePrice != null
+                                        ? Text(
+                                            '${widget.currencyCode ?? ""} '
+                                            '${item.product.salePrice!.toStringAsFixed(2)}',
+                                          )
+                                        : null,
+                                    onTap: () => Navigator.pop(ctx, item.product.id),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                  if (picked != null) {
+                    setState(() => _linkedProductId = picked);
+                  }
+                },
+          borderRadius: BorderRadius.circular(8),
+          child: InputDecorator(
+            decoration: InputDecoration(
+              labelText: l10n.product,
+              border: const OutlineInputBorder(),
+              prefixIcon: const Icon(LucideIcons.link),
+              suffixIcon: _linkedProductId != null
+                  ? IconButton(
+                      icon: const Icon(LucideIcons.x, size: 18),
+                      onPressed: () => setState(() => _linkedProductId = null),
+                    )
+                  : null,
+            ),
+            child: Text(
+              selected == null
+                  ? (products.isEmpty ? '—' : l10n.product)
+                  : '${selected.product.name}'
+                      ' (${selected.quantityOnHand.toStringAsFixed(2)}'
+                      '${selected.product.unit != null ? " ${selected.product.unit}" : ""})',
+              style: theme.textTheme.bodyMedium,
+            ),
+          ),
+        ),
+        if (_linkedProductId != null) ...[
+          SizedBox(height: 8.h),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l10n.quantity,
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ),
+              SizedBox(
+                width: 100,
+                child: TextFormField(
+                  initialValue: _stockQuantity.toStringAsFixed(0),
+                  decoration: InputDecoration(
+                    border: const OutlineInputBorder(),
+                    isDense: true,
+                    suffixText: selected?.product.unit ?? '',
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: amountFormatters(allowFraction: true),
+                  onChanged: (v) {
+                    final n = double.tryParse(v.replaceAll(',', ''));
+                    if (n != null && n > 0) {
+                      setState(() => _stockQuantity = n);
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
     );
   }
 }

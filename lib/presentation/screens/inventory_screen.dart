@@ -8,6 +8,8 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:aldeewan_mobile/domain/entities/product.dart';
 import 'package:aldeewan_mobile/l10n/generated/app_localizations.dart';
 import 'package:aldeewan_mobile/presentation/providers/currency_provider.dart';
+import 'package:aldeewan_mobile/utils/pdf_inventory_exporter.dart';
+import 'package:aldeewan_mobile/utils/error_handler.dart';
 import 'package:aldeewan_mobile/presentation/providers/inventory_provider.dart';
 import 'package:aldeewan_mobile/presentation/widgets/empty_state.dart';
 import 'package:aldeewan_mobile/presentation/widgets/product_form.dart';
@@ -42,6 +44,46 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     );
   }
 
+  /// Exports the current inventory snapshot to a PDF file and shares it.
+  /// The PDF includes summary band (totals, low-stock count, value) plus
+  /// a full table of all products with their quantities, prices,
+  /// thresholds, status, and stock value.
+  Future<void> _exportPdf(AppLocalizations l10n) async {
+    try {
+      final state = ref.read(inventoryProvider);
+      if (state.products.isEmpty) return;
+
+      await PdfInventoryExporter.export(
+        products: state.products,
+        baseCurrency: ref.read(currencyProvider),
+        appTitle: l10n.inventory,
+        subtitle: l10n.inventorySubtitle,
+        statusLabel: (isLow, isOut) =>
+            isOut ? l10n.outOfStock : (isLow ? l10n.lowStock : l10n.inStock),
+        labels: {
+          'name': l10n.productName,
+          'sku': l10n.sku,
+          'qty': l10n.quantityOnHand,
+          'cost': l10n.costPrice,
+          'sale': l10n.salePrice,
+          'threshold': l10n.lowStockThreshold,
+          'status': l10n.movementType, // 'Status' header fallback
+          'value': l10n.stockValue,
+          'totalProducts': l10n.totalProducts,
+          'lowStock': l10n.lowStockItems,
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.errorOccurred(
+            ErrorHandler.getUserFriendlyErrorMessage(e, l10n),
+          ))),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -69,7 +111,16 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.inventory)),
+      appBar: AppBar(
+        title: Text(l10n.inventory),
+        actions: [
+          IconButton(
+            icon: const Icon(LucideIcons.fileText),
+            tooltip: l10n.exportPdf,
+            onPressed: state.products.isEmpty ? null : () => _exportPdf(l10n),
+          ),
+        ],
+      ),
       body: state.isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(

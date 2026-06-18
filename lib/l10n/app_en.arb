@@ -78,6 +78,7 @@
   "balanceBroughtForward": "Balance Brought Forward",
   "closingBalance": "Closing Balance",
   "exportCsv": "Export CSV",
+  "exportPdf": "Export PDF",
   "debt": "Debt",
   "payment": "Payment",
   "credit": "Credit",

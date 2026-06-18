@@ -116,12 +116,40 @@ class CashbookListItem extends StatelessWidget {
               ],
             ],
           ),
-          trailing: Text(
-            '$currency ${numberFormat.format(transaction.amount)}',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: isIncome ? AppColors.success : AppColors.error,
-            ),
+          trailing: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${transaction.currencyCode ?? currency} ${numberFormat.format(transaction.amount)}',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: isIncome ? AppColors.success : AppColors.error,
+                ),
+              ),
+              // Show currency badge when transaction currency differs
+              // from the app default (passed in via `currency`).
+              if (transaction.currencyCode != null &&
+                  transaction.currencyCode != currency)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.tertiary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      transaction.currencyCode!,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontSize: 9,
+                        color: theme.colorScheme.tertiary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ),

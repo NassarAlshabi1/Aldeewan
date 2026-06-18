@@ -16,6 +16,7 @@ import 'package:aldeewan_mobile/utils/auth_service.dart';
 import 'package:aldeewan_mobile/utils/notification_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:aldeewan_mobile/presentation/providers/notification_history_provider.dart';
+import 'package:aldeewan_mobile/data/services/stock_alert_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,21 +46,29 @@ class MyApp extends ConsumerStatefulWidget {
 class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   late bool _isLocked;
   final _authService = AuthService();
+  VoidCallback? _stockAlertCancel;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _isLocked = widget.initialSecurityState;
-    
+
     if (_isLocked) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _checkAuth());
     }
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkMissedReminders());
+    // Start listening to inventory changes for low-stock alerts.
+    // The subscription lives for the app's lifetime; cancellation happens
+    // in dispose().
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _stockAlertCancel = ref.read(stockAlertServiceProvider).start();
+    });
   }
 
   @override
   void dispose() {
+    _stockAlertCancel?.call();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }

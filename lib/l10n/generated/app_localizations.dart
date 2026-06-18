@@ -560,6 +560,12 @@ abstract class AppLocalizations {
   /// **'Export CSV'**
   String get exportCsv;
 
+  /// No description provided for @exportPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Export PDF'**
+  String get exportPdf;
+
   /// No description provided for @debt.
   ///
   /// In en, this message translates to:
