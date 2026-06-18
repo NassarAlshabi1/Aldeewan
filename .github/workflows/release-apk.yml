@@ -118,7 +118,14 @@ jobs:
         run: flutter pub get
 
       - name: 🧬 Generate code (build_runner)
-        run: dart run build_runner build --delete-conflicting-outputs
+        # NOTE: We intentionally do NOT use --delete-conflicting-outputs.
+        # That flag would wipe our hand-maintained .realm.dart files
+        # (product_model.realm.dart, stock_movement_model.realm.dart) and
+        # replace them with whatever realm_generator emits — which has
+        # historically differed from what we ship in the repo, breaking
+        # the build (e.g. missing StockMovementModel class).
+        # Plain `build` only writes outputs that are out of date.
+        run: dart run build_runner build
 
       ############################################################
       # 5.5) ضغط الصور (يقلل حجم APK)
