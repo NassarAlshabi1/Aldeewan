@@ -11,6 +11,7 @@ import 'package:aldeewan_mobile/data/models/budget_model.dart';
 import 'package:aldeewan_mobile/data/models/savings_goal_model.dart';
 import 'package:aldeewan_mobile/data/models/category_model.dart';
 import 'package:aldeewan_mobile/data/models/notification_item_model.dart';
+import 'package:aldeewan_mobile/data/models/product_model.dart';
 
 class LocalDatabaseSource {
   late Future<Realm> db;
@@ -22,24 +23,25 @@ class LocalDatabaseSource {
 
   Future<Realm> _initDb() async {
     final key = await _getEncryptionKey();
-    
+
     final config = Configuration.local(
       [
-        PersonModel.schema, 
+        PersonModel.schema,
         TransactionModel.schema,
         FinancialAccountModel.schema,
         BudgetModel.schema,
         SavingsGoalModel.schema,
         CategoryModel.schema,
         NotificationItemModel.schema,
+        ProductModel.schema,
+        StockMovementModel.schema,
       ],
       encryptionKey: key,
-      schemaVersion: 6, // Incremented for isOpeningBalance field
+      schemaVersion: 7, // Incremented for Product + StockMovement + currencyCode fields
       migrationCallback: (migration, oldSchemaVersion) {
-        const targetVersion = 6;
+        const targetVersion = 7;
         debugPrint('🔄 Realm migration: v$oldSchemaVersion -> v$targetVersion');
-        
-        // Version-specific migrations
+
         if (oldSchemaVersion < 2) {
           debugPrint('  📦 Migrating v1 -> v2');
         }
@@ -54,13 +56,15 @@ class LocalDatabaseSource {
         }
         if (oldSchemaVersion < 6) {
           debugPrint('  📦 Migrating v5 -> v6: Added isOpeningBalance to Transaction');
-          // v5 -> v6: Added isOpeningBalance to Transaction (auto-defaults to false)
         }
-        
+        if (oldSchemaVersion < 7) {
+          debugPrint('  📦 Migrating v6 -> v7: Added currencyCode to Person & Transaction, Product & StockMovement collections');
+        }
+
         debugPrint('✅ Migration completed successfully');
       },
     );
-    
+
     return Realm(config);
   }
 
@@ -227,6 +231,147 @@ class LocalDatabaseSource {
           realm.deleteAll<FinancialAccountModel>();
           realm.deleteAll<BudgetModel>();
           realm.deleteAll<SavingsGoalModel>();
+          realm.deleteAll<ProductModel>();
+          realm.deleteAll<StockMovementModel>();
       });
+  }
+
+  // ============================================================
+  // Product Operations (Inventory System)
+  // ============================================================
+
+  Stream<List<ProductModel>> watchProducts() async* {
+    final realm = await db;
+    yield* realm
+        .query<ProductModel>("TRUEPREDICATE SORT(name ASC)")
+        .changes
+        .map((results) => results.results.toList());
+  }
+
+  Future<List<ProductModel>> getProducts() async {
+    final realm = await db;
+    return realm.query<ProductModel>("TRUEPREDICATE SORT(name ASC)").toList();
+  }
+
+  Future<ProductModel?> getProduct(String productId) async {
+    final realm = await db;
+    return realm.find<ProductModel>(productId);
+  }
+
+  Future<void> putProduct(ProductModel product) async {
+    final realm = await db;
+    realm.write(() {
+      realm.add(product, update: true);
+    });
+  }
+
+  Future<void> archiveProduct(String productId) async {
+    final realm = await db;
+    final product = realm.find<ProductModel>(productId);
+    if (product != null) {
+      realm.write(() {
+        product.isArchived = true;
+        product.updatedAt = DateTime.now();
+      });
+    }
+  }
+
+  Future<void> deleteProduct(String productId) async {
+    final realm = await db;
+    realm.write(() {
+      // Delete all stock movements for this product first
+      final movements = realm.query<StockMovementModel>(
+        "productId == \$0",
+        [productId],
+      );
+      realm.deleteMany(movements);
+
+      // Then delete the product
+      final product = realm.find<ProductModel>(productId);
+      if (product != null) {
+        realm.delete(product);
+      }
+    });
+  }
+
+  // ============================================================
+  // Stock Movement Operations (Inventory System)
+  // ============================================================
+
+  Stream<List<StockMovementModel>> watchStockMovements() async* {
+    final realm = await db;
+    yield* realm
+        .query<StockMovementModel>("TRUEPREDICATE SORT(date DESC)")
+        .changes
+        .map((results) => results.results.toList());
+  }
+
+  Future<List<StockMovementModel>> getStockMovementsByProduct(
+    String productId,
+  ) async {
+    final realm = await db;
+    return realm
+        .query<StockMovementModel>(
+          "productId == \$0 SORT(date DESC)",
+          [productId],
+        )
+        .toList();
+  }
+
+  Future<List<StockMovementModel>> getStockMovementsByDateRange(
+    DateTime start,
+    DateTime end,
+  ) async {
+    final realm = await db;
+    return realm
+        .query<StockMovementModel>(
+          "date >= \$0 AND date <= \$1 SORT(date DESC)",
+          [start, end],
+        )
+        .toList();
+  }
+
+  Future<void> putStockMovement(StockMovementModel movement) async {
+    final realm = await db;
+    realm.write(() {
+      realm.add(movement, update: true);
+    });
+  }
+
+  Future<void> deleteStockMovement(String movementId) async {
+    final realm = await db;
+    final movement = realm.find<StockMovementModel>(movementId);
+    if (movement != null) {
+      realm.write(() {
+        realm.delete(movement);
+      });
+    }
+  }
+
+  /// Computes the current quantity on hand for a product by summing all
+  /// movements (inbound positive, outbound negative).
+  Future<double> getQuantityOnHand(String productId) async {
+    final realm = await db;
+    final movements = realm
+        .query<StockMovementModel>("productId == \$0", [productId])
+        .toList();
+    double sum = 0;
+    for (final m in movements) {
+      final type = StockMovementType.values.firstWhere(
+        (e) => e.name == m.type,
+        orElse: () => StockMovementType.inbound,
+      );
+      switch (type) {
+        case StockMovementType.inbound:
+        case StockMovementType.adjustmentIn:
+          sum += m.quantity;
+          break;
+        case StockMovementType.outbound:
+        case StockMovementType.adjustmentOut:
+          sum -= m.quantity;
+          break;
+      }
+    }
+    return sum;
   }
 }

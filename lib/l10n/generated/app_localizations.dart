@@ -1874,6 +1874,252 @@ abstract class AppLocalizations {
   /// **'Save rate'**
   String get saveRate;
 
+  /// No description provided for @inventory.
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory'**
+  String get inventory;
+
+  /// No description provided for @inventorySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Track products, stock levels, and movements'**
+  String get inventorySubtitle;
+
+  /// No description provided for @product.
+  ///
+  /// In en, this message translates to:
+  /// **'Product'**
+  String get product;
+
+  /// No description provided for @products.
+  ///
+  /// In en, this message translates to:
+  /// **'Products'**
+  String get products;
+
+  /// No description provided for @addProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Add product'**
+  String get addProduct;
+
+  /// No description provided for @editProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit product'**
+  String get editProduct;
+
+  /// No description provided for @productName.
+  ///
+  /// In en, this message translates to:
+  /// **'Product name'**
+  String get productName;
+
+  /// No description provided for @sku.
+  ///
+  /// In en, this message translates to:
+  /// **'SKU'**
+  String get sku;
+
+  /// No description provided for @category.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get category;
+
+  /// No description provided for @unit.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit'**
+  String get unit;
+
+  /// No description provided for @costPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost price'**
+  String get costPrice;
+
+  /// No description provided for @salePrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Sale price'**
+  String get salePrice;
+
+  /// No description provided for @lowStockThreshold.
+  ///
+  /// In en, this message translates to:
+  /// **'Low-stock threshold'**
+  String get lowStockThreshold;
+
+  /// No description provided for @lowStockThresholdHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Alert when quantity on hand drops to or below this value. Leave empty to disable alerts.'**
+  String get lowStockThresholdHint;
+
+  /// No description provided for @quantityOnHand.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity on hand'**
+  String get quantityOnHand;
+
+  /// No description provided for @inStock.
+  ///
+  /// In en, this message translates to:
+  /// **'In stock'**
+  String get inStock;
+
+  /// No description provided for @outOfStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Out of stock'**
+  String get outOfStock;
+
+  /// No description provided for @lowStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Low stock'**
+  String get lowStock;
+
+  /// No description provided for @stockMovements.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock movements'**
+  String get stockMovements;
+
+  /// No description provided for @addStockMovement.
+  ///
+  /// In en, this message translates to:
+  /// **'Record stock movement'**
+  String get addStockMovement;
+
+  /// No description provided for @movementType.
+  ///
+  /// In en, this message translates to:
+  /// **'Movement type'**
+  String get movementType;
+
+  /// No description provided for @inbound.
+  ///
+  /// In en, this message translates to:
+  /// **'Inbound (add stock)'**
+  String get inbound;
+
+  /// No description provided for @outbound.
+  ///
+  /// In en, this message translates to:
+  /// **'Outbound (remove stock)'**
+  String get outbound;
+
+  /// No description provided for @adjustmentIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjustment (+)'**
+  String get adjustmentIn;
+
+  /// No description provided for @adjustmentOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjustment (-)'**
+  String get adjustmentOut;
+
+  /// No description provided for @quantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity'**
+  String get quantity;
+
+  /// No description provided for @unitCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit cost'**
+  String get unitCost;
+
+  /// No description provided for @movementNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note (optional)'**
+  String get movementNote;
+
+  /// No description provided for @noProductsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No products yet'**
+  String get noProductsYet;
+
+  /// No description provided for @noProductsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your first product to start tracking inventory.'**
+  String get noProductsHint;
+
+  /// No description provided for @noMovementsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No stock movements yet'**
+  String get noMovementsYet;
+
+  /// No description provided for @deleteProductTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete product?'**
+  String get deleteProductTitle;
+
+  /// No description provided for @deleteProductMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This will permanently delete the product and all its stock movements. This cannot be undone.'**
+  String get deleteProductMessage;
+
+  /// No description provided for @deleteMovementTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete stock movement?'**
+  String get deleteMovementTitle;
+
+  /// No description provided for @deleteMovementMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This will recalculate the product's quantity on hand. This cannot be undone.'**
+  String get deleteMovementMessage;
+
+  /// No description provided for @insufficientStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Insufficient stock. Available: {available} {unit}'**
+  String insufficientStock(String available, String unit);
+
+  /// No description provided for @stockValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock value'**
+  String get stockValue;
+
+  /// No description provided for @totalProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'Total products'**
+  String get totalProducts;
+
+  /// No description provided for @totalStockValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Total stock value'**
+  String get totalStockValue;
+
+  /// No description provided for @lowStockItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Low stock items'**
+  String get lowStockItems;
+
+  /// No description provided for @searchProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'Search products'**
+  String get searchProducts;
+
   /// No description provided for @net.
   ///
   /// In en, this message translates to:

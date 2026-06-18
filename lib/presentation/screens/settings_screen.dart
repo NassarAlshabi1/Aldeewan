@@ -33,6 +33,7 @@ import 'package:aldeewan_mobile/presentation/widgets/settings/settings_tile.dart
 import 'package:aldeewan_mobile/presentation/widgets/settings/theme_selector.dart';
 import 'package:aldeewan_mobile/presentation/widgets/showcase_wrapper.dart';
 import 'package:aldeewan_mobile/presentation/widgets/currency_selector_sheet.dart';
+import 'package:aldeewan_mobile/presentation/widgets/settings/exchange_rates_sheet.dart';
 import 'package:aldeewan_mobile/presentation/providers/backup_provider.dart';
 import 'package:aldeewan_mobile/presentation/widgets/restore_strategy_dialog.dart';
 import 'package:aldeewan_mobile/presentation/widgets/password_prompt_dialog.dart';
@@ -260,6 +261,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             SettingsSection(
               title: l10n.general,
               children: [
+                // Inventory tile — opens the inventory screen
+                SettingsTile(
+                  icon: LucideIcons.package,
+                  iconColor: Colors.indigo,
+                  title: l10n.inventory,
+                  subtitle: l10n.inventorySubtitle,
+                  trailing: Icon(LucideIcons.chevronRight, size: 20.sp, color: theme.colorScheme.onSurfaceVariant),
+                  onTap: () => context.push('/inventory'),
+                ),
+                const Divider(height: 1, indent: 60),
                 SettingsTile(
                   icon: LucideIcons.banknote,
                   iconColor: Colors.green,
@@ -285,7 +296,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     }
                   },
                 ),
-                const Divider(height: 1, indent: 60), // Not apply .w here usually for consistency, but let's check others. Wait, usually indent is fixed or .w. Let's use 60.w.
+                const Divider(height: 1, indent: 60),
+
+                // Exchange rates — lets the user define FX rates between the
+                // base currency and any other currency used across persons.
+                SettingsTile(
+                  icon: LucideIcons.arrowLeftRight,
+                  iconColor: Colors.teal,
+                  title: l10n.exchangeRates,
+                  subtitle: l10n.exchangeRatesSubtitle,
+                  trailing: Icon(LucideIcons.chevronRight, size: 20.sp, color: theme.colorScheme.onSurfaceVariant),
+                  onTap: () => ExchangeRatesSheet.show(context),
+                ),
+                const Divider(height: 1, indent: 60),
 
                 SettingsTile(
                   icon: LucideIcons.lock,

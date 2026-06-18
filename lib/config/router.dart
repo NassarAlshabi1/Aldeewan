@@ -18,6 +18,8 @@ import 'package:aldeewan_mobile/presentation/screens/notifications_screen.dart';
 import 'package:aldeewan_mobile/presentation/screens/transaction_details_screen.dart';
 import 'package:aldeewan_mobile/presentation/screens/help_center_screen.dart';
 import 'package:aldeewan_mobile/presentation/screens/person_details_screen.dart';
+import 'package:aldeewan_mobile/presentation/screens/inventory_screen.dart';
+import 'package:aldeewan_mobile/presentation/screens/product_details_screen.dart';
 import 'package:aldeewan_mobile/presentation/widgets/scaffold_with_nav_bar.dart';
 import 'package:aldeewan_mobile/presentation/widgets/showcase_wrapper.dart';
 import 'package:aldeewan_mobile/domain/entities/transaction.dart';
@@ -110,6 +112,20 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/analytics',
             builder: (context, state) => const AnalyticsScreen(),
+          ),
+          GoRoute(
+            path: '/inventory',
+            builder: (context, state) => const InventoryScreen(),
+            routes: [
+              GoRoute(
+                path: ':id',
+                parentNavigatorKey: rootNavigatorKey,
+                builder: (context, state) {
+                  final id = state.pathParameters['id']!;
+                  return ProductDetailsScreen(productId: id);
+                },
+              ),
+            ],
           ),
           GoRoute(
             path: '/settings',

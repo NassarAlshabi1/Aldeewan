@@ -569,12 +569,44 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> with SingleTickerPr
                 borderRadius: BorderRadius.circular(12.r),
               ),
               alignment: Alignment.center,
-              child: Text(
-                person.name.isNotEmpty ? person.name[0].toUpperCase() : '?',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                ),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Center(
+                    child: Text(
+                      person.name.isNotEmpty ? person.name[0].toUpperCase() : '?',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  // Currency badge when person uses a non-default currency
+                  if (person.currencyCode != null && person.currencyCode != currency)
+                    Positioned(
+                      right: -6,
+                      top: -6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.tertiary,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.surface,
+                            width: 1.2,
+                          ),
+                        ),
+                        child: Text(
+                          person.currencyCode!,
+                          style: TextStyle(
+                            fontSize: 8.sp,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onTertiary,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
             title: Text(

@@ -940,6 +940,129 @@ class AppLocalizationsEn extends AppLocalizations {
   String get saveRate => 'Save rate';
 
   @override
+  String get inventory => 'Inventory';
+
+  @override
+  String get inventorySubtitle => 'Track products, stock levels, and movements';
+
+  @override
+  String get product => 'Product';
+
+  @override
+  String get products => 'Products';
+
+  @override
+  String get addProduct => 'Add product';
+
+  @override
+  String get editProduct => 'Edit product';
+
+  @override
+  String get productName => 'Product name';
+
+  @override
+  String get sku => 'SKU';
+
+  @override
+  String get category => 'Category';
+
+  @override
+  String get unit => 'Unit';
+
+  @override
+  String get costPrice => 'Cost price';
+
+  @override
+  String get salePrice => 'Sale price';
+
+  @override
+  String get lowStockThreshold => 'Low-stock threshold';
+
+  @override
+  String get lowStockThresholdHint => 'Alert when quantity on hand drops to or below this value. Leave empty to disable alerts.';
+
+  @override
+  String get quantityOnHand => 'Quantity on hand';
+
+  @override
+  String get inStock => 'In stock';
+
+  @override
+  String get outOfStock => 'Out of stock';
+
+  @override
+  String get lowStock => 'Low stock';
+
+  @override
+  String get stockMovements => 'Stock movements';
+
+  @override
+  String get addStockMovement => 'Record stock movement';
+
+  @override
+  String get movementType => 'Movement type';
+
+  @override
+  String get inbound => 'Inbound (add stock)';
+
+  @override
+  String get outbound => 'Outbound (remove stock)';
+
+  @override
+  String get adjustmentIn => 'Adjustment (+)';
+
+  @override
+  String get adjustmentOut => 'Adjustment (-)';
+
+  @override
+  String get quantity => 'Quantity';
+
+  @override
+  String get unitCost => 'Unit cost';
+
+  @override
+  String get movementNote => 'Note (optional)';
+
+  @override
+  String get noProductsYet => 'No products yet';
+
+  @override
+  String get noProductsHint => 'Add your first product to start tracking inventory.';
+
+  @override
+  String get noMovementsYet => 'No stock movements yet';
+
+  @override
+  String get deleteProductTitle => 'Delete product?';
+
+  @override
+  String get deleteProductMessage => 'This will permanently delete the product and all its stock movements. This cannot be undone.';
+
+  @override
+  String get deleteMovementTitle => 'Delete stock movement?';
+
+  @override
+  String get deleteMovementMessage => 'This will recalculate the product\'s quantity on hand. This cannot be undone.';
+
+  @override
+  String insufficientStock(String available, String unit) => 'Insufficient stock. Available: $available $unit';
+
+  @override
+  String get stockValue => 'Stock value';
+
+  @override
+  String get totalProducts => 'Total products';
+
+  @override
+  String get totalStockValue => 'Total stock value';
+
+  @override
+  String get lowStockItems => 'Low stock items';
+
+  @override
+  String get searchProducts => 'Search products';
+
+  @override
   String get net => 'Net';
 
   @override

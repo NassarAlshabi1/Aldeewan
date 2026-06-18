@@ -935,6 +935,129 @@ class AppLocalizationsAr extends AppLocalizations {
   String get saveRate => 'حفظ السعر';
 
   @override
+  String get inventory => 'المخزون';
+
+  @override
+  String get inventorySubtitle => 'تتبع المنتجات ومستويات المخزون والحركات';
+
+  @override
+  String get product => 'المنتج';
+
+  @override
+  String get products => 'المنتجات';
+
+  @override
+  String get addProduct => 'إضافة منتج';
+
+  @override
+  String get editProduct => 'تعديل المنتج';
+
+  @override
+  String get productName => 'اسم المنتج';
+
+  @override
+  String get sku => 'رمز المنتج (SKU)';
+
+  @override
+  String get category => 'الفئة';
+
+  @override
+  String get unit => 'الوحدة';
+
+  @override
+  String get costPrice => 'سعر التكلفة';
+
+  @override
+  String get salePrice => 'سعر البيع';
+
+  @override
+  String get lowStockThreshold => 'حد التنبيه لنقص المخزون';
+
+  @override
+  String get lowStockThresholdHint => 'تنبيه عند انخفاض الكمية المتوفرة إلى هذا الحد أو أقل. اتركه فارغاً لتعطيل التنبيه.';
+
+  @override
+  String get quantityOnHand => 'الكمية المتوفرة';
+
+  @override
+  String get inStock => 'متوفر';
+
+  @override
+  String get outOfStock => 'غير متوفر';
+
+  @override
+  String get lowStock => 'مخزون منخفض';
+
+  @override
+  String get stockMovements => 'حركات المخزون';
+
+  @override
+  String get addStockMovement => 'تسجيل حركة مخزون';
+
+  @override
+  String get movementType => 'نوع الحركة';
+
+  @override
+  String get inbound => 'وارد (إضافة للمخزون)';
+
+  @override
+  String get outbound => 'صادر (إخراج من المخزون)';
+
+  @override
+  String get adjustmentIn => 'تسوية (+)';
+
+  @override
+  String get adjustmentOut => 'تسوية (-)';
+
+  @override
+  String get quantity => 'الكمية';
+
+  @override
+  String get unitCost => 'تكلفة الوحدة';
+
+  @override
+  String get movementNote => 'ملاحظة (اختياري)';
+
+  @override
+  String get noProductsYet => 'لا توجد منتجات بعد';
+
+  @override
+  String get noProductsHint => 'أضف أول منتج لبدء تتبع المخزون.';
+
+  @override
+  String get noMovementsYet => 'لا توجد حركات مخزون بعد';
+
+  @override
+  String get deleteProductTitle => 'حذف المنتج؟';
+
+  @override
+  String get deleteProductMessage => 'سيتم حذف المنتج وجميع حركات مخزونه نهائياً. لا يمكن التراجع عن هذا الإجراء.';
+
+  @override
+  String get deleteMovementTitle => 'حذف حركة المخزون؟';
+
+  @override
+  String get deleteMovementMessage => 'سيتم إعادة حساب الكمية المتوفرة للمنتج. لا يمكن التراجع عن هذا الإجراء.';
+
+  @override
+  String insufficientStock(String available, String unit) => 'مخزون غير كافٍ. المتوفر: $available $unit';
+
+  @override
+  String get stockValue => 'قيمة المخزون';
+
+  @override
+  String get totalProducts => 'إجمالي المنتجات';
+
+  @override
+  String get totalStockValue => 'إجمالي قيمة المخزون';
+
+  @override
+  String get lowStockItems => 'أصناف منخفضة المخزون';
+
+  @override
+  String get searchProducts => 'ابحث عن منتج';
+
+  @override
   String get net => 'الصافي';
 
   @override
