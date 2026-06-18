@@ -68,9 +68,9 @@ class _PersonFormState extends ConsumerState<PersonForm> {
     final appCurrency = ref.watch(currencyProvider);
     // Effective display: person's currency or app default
     final effectiveCurrency = _currencyCode ?? appCurrency;
-    final currencyInfo = CurrencyData.currencies.firstWhere(
+    final currencyInfo = supportedCurrencies.firstWhere(
       (c) => c.code == effectiveCurrency,
-      orElse: () => CurrencyData.currencies.first,
+      orElse: () => supportedCurrencies.first,
     );
 
     return Padding(
