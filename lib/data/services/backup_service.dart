@@ -217,6 +217,7 @@ class BackupService {
     'phone': m.phone,
     'createdAt': m.createdAt.toIso8601String(),
     'isArchived': m.isArchived,
+    'currencyCode': m.currencyCode,
   };
 
   Map<String, dynamic> _serializeTransaction(TransactionModel m) => {
@@ -233,6 +234,7 @@ class BackupService {
     'accountId': m.accountId,
     'goalId': m.goalId,
     'isOpeningBalance': m.isOpeningBalance,
+    'currencyCode': m.currencyCode,
   };
 
   Map<String, dynamic> _serializeAccount(FinancialAccountModel m) => {
@@ -290,6 +292,7 @@ class BackupService {
     DateTime.tryParse(m['createdAt'] ?? '') ?? DateTime.now(),
     isArchived: m['isArchived'] ?? false,
     phone: m['phone'],
+    currencyCode: m['currencyCode'],
   );
 
   TransactionModel _deserializeTransaction(Map<String, dynamic> m) => TransactionModel(
@@ -306,6 +309,7 @@ class BackupService {
     accountId: m['accountId'],
     goalId: m['goalId'],
     isOpeningBalance: m['isOpeningBalance'] ?? false,
+    currencyCode: m['currencyCode'],
   );
 
   FinancialAccountModel _deserializeAccount(Map<String, dynamic> m) => FinancialAccountModel(

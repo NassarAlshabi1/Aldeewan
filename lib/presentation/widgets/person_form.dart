@@ -7,6 +7,8 @@ import 'package:uuid/uuid.dart';
 import 'package:aldeewan_mobile/l10n/generated/app_localizations.dart';
 import 'package:aldeewan_mobile/utils/toast_service.dart';
 import 'package:aldeewan_mobile/presentation/providers/currency_provider.dart';
+import 'package:aldeewan_mobile/data/models/currency_data.dart';
+import 'package:aldeewan_mobile/presentation/widgets/currency_selector_sheet.dart';
 
 class PersonForm extends ConsumerStatefulWidget {
   final Person? person;
@@ -23,6 +25,9 @@ class _PersonFormState extends ConsumerState<PersonForm> {
   late TextEditingController _nameController;
   late TextEditingController _phoneController;
   late PersonRole _role;
+  /// null = use global app currency (default).
+  /// When set, this person's balance and transactions are tracked in this currency.
+  String? _currencyCode;
 
   @override
   void initState() {
@@ -30,6 +35,7 @@ class _PersonFormState extends ConsumerState<PersonForm> {
     _nameController = TextEditingController(text: widget.person?.name ?? '');
     _phoneController = TextEditingController(text: widget.person?.phone ?? '');
     _role = widget.person?.role ?? PersonRole.customer;
+    _currencyCode = widget.person?.currencyCode;
   }
 
   @override
@@ -47,6 +53,7 @@ class _PersonFormState extends ConsumerState<PersonForm> {
         name: _nameController.text,
         phone: _phoneController.text.isEmpty ? null : _phoneController.text,
         createdAt: widget.person?.createdAt ?? DateTime.now(),
+        currencyCode: _currencyCode,
       );
       widget.onSave(person);
       HapticFeedback.lightImpact();
@@ -58,6 +65,13 @@ class _PersonFormState extends ConsumerState<PersonForm> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final appCurrency = ref.watch(currencyProvider);
+    // Effective display: person's currency or app default
+    final effectiveCurrency = _currencyCode ?? appCurrency;
+    final currencyInfo = CurrencyData.currencies.firstWhere(
+      (c) => c.code == effectiveCurrency,
+      orElse: () => CurrencyData.currencies.first,
+    );
 
     return Padding(
       padding: EdgeInsets.only(
@@ -73,7 +87,7 @@ class _PersonFormState extends ConsumerState<PersonForm> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              widget.person == null ? l10n.addPerson : l10n.edit, // 'Edit' might be too short, maybe 'Edit Person' key needed
+              widget.person == null ? l10n.addPerson : l10n.edit,
               style: Theme.of(context).textTheme.titleLarge,
               textAlign: TextAlign.center,
             ),
@@ -97,13 +111,12 @@ class _PersonFormState extends ConsumerState<PersonForm> {
               decoration: InputDecoration(
                 labelText: l10n.phone,
                 border: const OutlineInputBorder(),
-                hintText: ref.watch(currencyProvider) == 'SDG' ? '0912391234' : null,
+                hintText: effectiveCurrency == 'SDG' ? '0912391234' : null,
               ),
               keyboardType: TextInputType.phone,
               validator: (value) {
                 if (value != null && value.isNotEmpty) {
-                  final currency = ref.read(currencyProvider);
-                  if (currency == 'SDG') {
+                  if (effectiveCurrency == 'SDG') {
                     if (!RegExp(r'^0\d{9}$').hasMatch(value)) {
                       return 'Invalid phone number (Must be 10 digits starting with 0)';
                     }
@@ -137,6 +150,85 @@ class _PersonFormState extends ConsumerState<PersonForm> {
                 }
               },
             ),
+            SizedBox(height: 12.h),
+            // Currency picker — null means "use app default"
+            InkWell(
+              onTap: () async {
+                final selected = await showDialog<String?>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: Text(l10n.personCurrency),
+                    content: Text(l10n.personCurrencyDialogBody),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, ''),
+                        child: Text(l10n.useAppDefault),
+                      ),
+                      FilledButton(
+                        onPressed: () async {
+                          Navigator.pop(ctx, 'pick');
+                        },
+                        child: Text(l10n.chooseCurrency),
+                      ),
+                    ],
+                  ),
+                );
+                if (selected == 'pick') {
+                  final code = await CurrencySelectorSheet.show(context, effectiveCurrency);
+                  if (code != null) {
+                    setState(() => _currencyCode = code);
+                  }
+                } else if (selected != null) {
+                  // empty string = use app default
+                  setState(() => _currencyCode = null);
+                }
+              },
+              borderRadius: BorderRadius.circular(8),
+              child: InputDecorator(
+                decoration: InputDecoration(
+                  labelText: l10n.personCurrency,
+                  border: const OutlineInputBorder(),
+                  suffixIcon: const Icon(Icons.arrow_drop_down),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      currencyInfo.symbol,
+                      style: TextStyle(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                    Expanded(
+                      child: Text(
+                        _currencyCode == null
+                            ? '${currencyInfo.name} (${l10n.appDefault})'
+                            : currencyInfo.name,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ),
+                    Text(
+                      effectiveCurrency,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (_currencyCode != null && _currencyCode != appCurrency)
+              Padding(
+                padding: EdgeInsets.only(top: 6.h),
+                child: Text(
+                  l10n.personCurrencyNote,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                ),
+              ),
             SizedBox(height: 24.h),
             FilledButton(
               onPressed: () => _save(l10n),

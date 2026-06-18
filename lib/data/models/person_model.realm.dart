@@ -18,6 +18,7 @@ class PersonModel extends _PersonModel
     DateTime createdAt,
     bool isArchived, {
     String? phone,
+    String? currencyCode,
   }) {
     RealmObjectBase.set(this, 'id', id);
     RealmObjectBase.set(this, 'role', role);
@@ -25,6 +26,7 @@ class PersonModel extends _PersonModel
     RealmObjectBase.set(this, 'phone', phone);
     RealmObjectBase.set(this, 'createdAt', createdAt);
     RealmObjectBase.set(this, 'isArchived', isArchived);
+    RealmObjectBase.set(this, 'currencyCode', currencyCode);
   }
 
   PersonModel._();
@@ -64,6 +66,13 @@ class PersonModel extends _PersonModel
       RealmObjectBase.set(this, 'isArchived', value);
 
   @override
+  String? get currencyCode =>
+      RealmObjectBase.get<String>(this, 'currencyCode') as String?;
+  @override
+  set currencyCode(String? value) =>
+      RealmObjectBase.set(this, 'currencyCode', value);
+
+  @override
   Stream<RealmObjectChanges<PersonModel>> get changes =>
       RealmObjectBase.getChanges<PersonModel>(this);
 
@@ -83,6 +92,7 @@ class PersonModel extends _PersonModel
       'phone': phone.toEJson(),
       'createdAt': createdAt.toEJson(),
       'isArchived': isArchived.toEJson(),
+      'currencyCode': currencyCode.toEJson(),
     };
   }
 
@@ -104,6 +114,7 @@ class PersonModel extends _PersonModel
           fromEJson(createdAt),
           fromEJson(isArchived),
           phone: fromEJson(ejson['phone']),
+          currencyCode: fromEJson(ejson['currencyCode']),
         ),
       _ => raiseInvalidEJson(ejson),
     };
@@ -123,6 +134,7 @@ class PersonModel extends _PersonModel
         SchemaProperty('phone', RealmPropertyType.string, optional: true),
         SchemaProperty('createdAt', RealmPropertyType.timestamp),
         SchemaProperty('isArchived', RealmPropertyType.bool),
+        SchemaProperty('currencyCode', RealmPropertyType.string, optional: true),
       ],
     );
   }();

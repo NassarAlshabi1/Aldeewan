@@ -249,6 +249,7 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> with SingleTickerPr
       builder: (context) => TransactionForm(
         personId: person.id,
         personRole: person.role,
+        currencyCode: person.currencyCode,
         initialType: type,
         initialAmount: initialAmount,
         initialDate: initialDate,
@@ -609,8 +610,8 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> with SingleTickerPr
                     alignment: Alignment.centerRight,
                     child: Text(
                       NumberFormat.currency(
-                        symbol: currency,
-                        decimalDigits: currency == 'SDG' ? 0 : 2,
+                        symbol: person.currencyCode ?? currency,
+                        decimalDigits: (person.currencyCode ?? currency) == 'SDG' ? 0 : 2,
                       ).format(balance.abs()),
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
@@ -619,10 +620,10 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> with SingleTickerPr
                     ),
                   ),
                   Text(
-                    balance == 0 
-                        ? l10n.settled 
-                        : (role == PersonRole.customer 
-                            ? (balance > 0 ? l10n.receivable : l10n.advanceYouOwe) 
+                    balance == 0
+                        ? l10n.settled
+                        : (role == PersonRole.customer
+                            ? (balance > 0 ? l10n.receivable : l10n.advanceYouOwe)
                             : (balance > 0 ? l10n.payable : l10n.advanceOwesYou)),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       fontSize: 10.sp,

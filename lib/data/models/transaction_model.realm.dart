@@ -25,6 +25,7 @@ class TransactionModel extends _TransactionModel
     int? accountId,
     String? goalId,
     bool isOpeningBalance = false,
+    String? currencyCode,
   }) {
     RealmObjectBase.set(this, 'uuid', uuid);
     RealmObjectBase.set(this, 'type', type);
@@ -39,6 +40,7 @@ class TransactionModel extends _TransactionModel
     RealmObjectBase.set(this, 'accountId', accountId);
     RealmObjectBase.set(this, 'goalId', goalId);
     RealmObjectBase.set(this, 'isOpeningBalance', isOpeningBalance);
+    RealmObjectBase.set(this, 'currencyCode', currencyCode);
   }
 
   TransactionModel._();
@@ -116,6 +118,13 @@ class TransactionModel extends _TransactionModel
       RealmObjectBase.set(this, 'isOpeningBalance', value);
 
   @override
+  String? get currencyCode =>
+      RealmObjectBase.get<String>(this, 'currencyCode') as String?;
+  @override
+  set currencyCode(String? value) =>
+      RealmObjectBase.set(this, 'currencyCode', value);
+
+  @override
   Stream<RealmObjectChanges<TransactionModel>> get changes =>
       RealmObjectBase.getChanges<TransactionModel>(this);
 
@@ -143,6 +152,7 @@ class TransactionModel extends _TransactionModel
       'accountId': accountId.toEJson(),
       'goalId': goalId.toEJson(),
       'isOpeningBalance': isOpeningBalance.toEJson(),
+      'currencyCode': currencyCode.toEJson(),
     };
   }
 
@@ -170,6 +180,7 @@ class TransactionModel extends _TransactionModel
           accountId: fromEJson(ejson['accountId']),
           goalId: fromEJson(ejson['goalId']),
           isOpeningBalance: fromEJson(ejson['isOpeningBalance'], defaultValue: false),
+          currencyCode: fromEJson(ejson['currencyCode']),
         ),
       _ => raiseInvalidEJson(ejson),
     };
@@ -211,6 +222,12 @@ class TransactionModel extends _TransactionModel
           indexType: RealmIndexType.regular,
         ),
         SchemaProperty('isOpeningBalance', RealmPropertyType.bool),
+        SchemaProperty(
+          'currencyCode',
+          RealmPropertyType.string,
+          optional: true,
+          indexType: RealmIndexType.regular,
+        ),
       ],
     );
   }();

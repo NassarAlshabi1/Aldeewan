@@ -24,6 +24,9 @@ class TransactionForm extends ConsumerStatefulWidget {
   final double? initialAmount;
   final DateTime? initialDate;
   final String? initialNote;
+  /// Currency code inherited from the person (if any).
+  /// When null, falls back to the global app currency.
+  final String? currencyCode;
   final Function(Transaction) onSave;
 
   const TransactionForm({
@@ -34,6 +37,7 @@ class TransactionForm extends ConsumerStatefulWidget {
     this.initialAmount,
     this.initialDate,
     this.initialNote,
+    this.currencyCode,
     required this.onSave,
   });
 
@@ -118,6 +122,8 @@ class _TransactionFormState extends ConsumerState<TransactionForm> {
         date: _date,
         note: _noteController.text.isEmpty ? null : _noteController.text,
         isOpeningBalance: _isOpeningBalance,
+        // Inherit currency from the person, or fall back to the global app currency.
+        currencyCode: widget.currencyCode ?? ref.read(currencyProvider),
       );
       widget.onSave(transaction);
       HapticFeedback.lightImpact();
@@ -152,7 +158,8 @@ class _TransactionFormState extends ConsumerState<TransactionForm> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final currency = ref.watch(currencyProvider);
+    // Effective currency: person-specific currency overrides the global default.
+    final currency = widget.currencyCode ?? ref.watch(currencyProvider);
     final isSimpleMode = ref.watch(settingsProvider);
 
     return Padding(

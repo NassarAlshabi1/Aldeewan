@@ -898,6 +898,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clear => 'Clear';
 
   @override
+  String get personCurrency => 'Currency';
+
+  @override
+  String get personCurrencyNote => 'Transactions for this person will be tracked in this currency.';
+
+  @override
+  String get personCurrencyDialogBody => 'Use the app\'s default currency, or pick a specific currency for this person.';
+
+  @override
+  String get useAppDefault => 'Use app default';
+
+  @override
+  String get chooseCurrency => 'Choose currency';
+
+  @override
+  String get appDefault => 'default';
+
+  @override
+  String personCurrencyBadge(String code) => 'Currency: $code';
+
+  @override
+  String get exchangeRates => 'Exchange rates';
+
+  @override
+  String get exchangeRatesSubtitle => 'Define how much 1 unit of the base currency equals in other currencies. Used to estimate the dashboard total across mixed currencies.';
+
+  @override
+  String get baseCurrency => 'Base currency';
+
+  @override
+  String get rate => 'Rate';
+
+  @override
+  String rateHint(String base, String code) => '1 $base = ? $code';
+
+  @override
+  String get mixedTotalNote => 'Totals combine multiple currencies using the rates you set. They are estimates only.';
+
+  @override
+  String get saveRate => 'Save rate';
+
+  @override
   String get net => 'Net';
 
   @override

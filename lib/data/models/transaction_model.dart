@@ -23,11 +23,16 @@ class _TransactionModel {
   String? externalId;
   String? status;
   int? accountId;
-  
+
   @Indexed()
   String? goalId; // Links transaction to a savings goal
-  
+
   bool isOpeningBalance = false; // Default to false
+
+  /// Currency code (ISO 4217). Inherited from the person at creation time.
+  /// Null = use global app currency (backward compatibility with old data).
+  @Indexed()
+  String? currencyCode;
 }
 
 extension TransactionModelMapper on TransactionModel {
@@ -46,6 +51,7 @@ extension TransactionModelMapper on TransactionModel {
       accountId: accountId,
       goalId: goalId,
       isOpeningBalance: isOpeningBalance,
+      currencyCode: currencyCode,
     );
   }
 
@@ -64,6 +70,7 @@ extension TransactionModelMapper on TransactionModel {
       accountId: transaction.accountId,
       goalId: transaction.goalId,
       isOpeningBalance: transaction.isOpeningBalance,
+      currencyCode: transaction.currencyCode,
     );
   }
 }

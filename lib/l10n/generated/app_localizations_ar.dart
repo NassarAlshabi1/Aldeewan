@@ -893,6 +893,48 @@ class AppLocalizationsAr extends AppLocalizations {
   String get clear => 'مسح';
 
   @override
+  String get personCurrency => 'العملة';
+
+  @override
+  String get personCurrencyNote => 'سيتم تتبع معاملات هذا الشخص بهذه العملة.';
+
+  @override
+  String get personCurrencyDialogBody => 'استخدم العملة الافتراضية للتطبيق، أو اختر عملة محددة لهذا الشخص.';
+
+  @override
+  String get useAppDefault => 'استخدم الافتراضية';
+
+  @override
+  String get chooseCurrency => 'اختر عملة';
+
+  @override
+  String get appDefault => 'افتراضية';
+
+  @override
+  String personCurrencyBadge(String code) => 'العملة: $code';
+
+  @override
+  String get exchangeRates => 'أسعار الصرف';
+
+  @override
+  String get exchangeRatesSubtitle => 'حدد كم يساوي 1 وحدة من العملة الأساسية بالعملات الأخرى. يُستخدم لتقدير المجموع الكلي عبر العملات المختلطة.';
+
+  @override
+  String get baseCurrency => 'العملة الأساسية';
+
+  @override
+  String get rate => 'السعر';
+
+  @override
+  String rateHint(String base, String code) => '1 $base = كم $code';
+
+  @override
+  String get mixedTotalNote => 'المجاميع تجمع عملات مختلفة باستخدام الأسعار التي حددتها. وهي تقديرية فقط.';
+
+  @override
+  String get saveRate => 'حفظ السعر';
+
+  @override
   String get net => 'الصافي';
 
   @override

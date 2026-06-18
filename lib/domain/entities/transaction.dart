@@ -23,18 +23,23 @@ class Transaction {
   final String? category;
   final String? note;
   final DateTime? dueDate;
-  
+
   // New Fields for V1.2
   final String? externalId;
   final String? status;
   final int? accountId;
-  
+
   // Goal tracking - links transaction to a savings goal
   final String? goalId;
-  
+
   // V1.2.1: Old Debt / Opening Balance support
   // If true, this transaction does not affect the cash/bank balance.
   final bool isOpeningBalance;
+
+  /// Currency code (ISO 4217) — inherited from the person at creation time.
+  /// For cash-only transactions (no personId), falls back to the global app currency.
+  /// Used so reports/dashboard can group balances by currency.
+  final String? currencyCode;
 
   Transaction({
     required this.id,
@@ -50,6 +55,7 @@ class Transaction {
     this.accountId,
     this.goalId,
     this.isOpeningBalance = false,
+    this.currencyCode,
   });
 }
 

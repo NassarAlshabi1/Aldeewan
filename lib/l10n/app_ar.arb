@@ -291,6 +291,31 @@
   "clearAllConfirmTitle": "مسح جميع الإشعارات؟",
   "clearAllConfirmMessage": "سيتم حذف جميع الإشعارات نهائياً. لا يمكن التراجع عن هذا الإجراء.",
   "clear": "مسح",
+  "personCurrency": "العملة",
+  "personCurrencyNote": "سيتم تتبع معاملات هذا الشخص بهذه العملة.",
+  "personCurrencyDialogBody": "استخدم العملة الافتراضية للتطبيق، أو اختر عملة محددة لهذا الشخص.",
+  "useAppDefault": "استخدم الافتراضية",
+  "chooseCurrency": "اختر عملة",
+  "appDefault": "افتراضية",
+  "personCurrencyBadge": "العملة: {code}",
+  "@personCurrencyBadge": {
+    "placeholders": {
+      "code": { "type": "String" }
+    }
+  },
+  "exchangeRates": "أسعار الصرف",
+  "exchangeRatesSubtitle": "حدد كم يساوي 1 وحدة من العملة الأساسية بالعملات الأخرى. يُستخدم لتقدير المجموع الكلي عبر العملات المختلطة.",
+  "baseCurrency": "العملة الأساسية",
+  "rate": "السعر",
+  "rateHint": "1 {base} = كم {code}",
+  "@rateHint": {
+    "placeholders": {
+      "base": { "type": "String" },
+      "code": { "type": "String" }
+    }
+  },
+  "mixedTotalNote": "المجاميع تجمع عملات مختلفة باستخدام الأسعار التي حددتها. وهي تقديرية فقط.",
+  "saveRate": "حفظ السعر",
   "dailyReminder": "تذكير يومي",
   "dailyReminderSubtitle": "احصل على تذكير يومي لتسجيل معاملاتك",
   "authenticateReason": "يرجى المصادقة للوصول إلى الديوان",

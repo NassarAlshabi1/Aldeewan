@@ -315,6 +315,7 @@ class TransactionDetailsScreen extends ConsumerWidget {
           initialType: transaction.type,
           personId: transaction.personId,
           personRole: person?.role,
+          currencyCode: person?.currencyCode ?? transaction.currencyCode,
           onSave: (updatedTx) {
              // Create a new transaction that preserves the original ID for "update"
              final preservationTx = Transaction(

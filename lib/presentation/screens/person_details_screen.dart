@@ -43,6 +43,7 @@ class PersonDetailsScreen extends ConsumerWidget {
       builder: (context) => TransactionForm(
         personId: person.id,
         personRole: person.role,
+        currencyCode: person.currencyCode,
         initialType: person.role == PersonRole.customer
             ? TransactionType.saleOnCredit
             : TransactionType.purchaseOnCredit,
@@ -185,17 +186,28 @@ class PersonDetailsScreen extends ConsumerWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '$currency ${numberFormat.format(balance.abs())}',
+                              '${person.currencyCode ?? currency} ${numberFormat.format(balance.abs())}',
                               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                                     color: balanceColor,
                                     fontWeight: FontWeight.bold,
                                   ),
                             ),
+                            if (person.currencyCode != null && person.currencyCode != currency)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: Text(
+                                  l10n.personCurrencyBadge(person.currencyCode!),
+                                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                        color: Theme.of(context).colorScheme.primary,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                ),
+                              ),
                             Text(
-                              balance == 0 
-                                  ? l10n.settled 
-                                  : (person.role == PersonRole.customer 
-                                      ? (balance > 0 ? l10n.receivable : l10n.advance) 
+                              balance == 0
+                                  ? l10n.settled
+                                  : (person.role == PersonRole.customer
+                                      ? (balance > 0 ? l10n.receivable : l10n.advance)
                                       : (balance > 0 ? l10n.payable : l10n.advance)),
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -291,7 +303,7 @@ class PersonDetailsScreen extends ConsumerWidget {
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   Text(
-                                    '$currency ${numberFormat.format(tx.amount)}',
+                                    '${tx.currencyCode ?? person.currencyCode ?? currency} ${numberFormat.format(tx.amount)}',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 16.sp,

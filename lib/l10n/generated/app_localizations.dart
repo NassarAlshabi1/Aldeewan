@@ -1790,6 +1790,90 @@ abstract class AppLocalizations {
   /// **'Clear'**
   String get clear;
 
+  /// No description provided for @personCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency'**
+  String get personCurrency;
+
+  /// No description provided for @personCurrencyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions for this person will be tracked in this currency.'**
+  String get personCurrencyNote;
+
+  /// No description provided for @personCurrencyDialogBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the app\'s default currency, or pick a specific currency for this person.'**
+  String get personCurrencyDialogBody;
+
+  /// No description provided for @useAppDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Use app default'**
+  String get useAppDefault;
+
+  /// No description provided for @chooseCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose currency'**
+  String get chooseCurrency;
+
+  /// No description provided for @appDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'default'**
+  String get appDefault;
+
+  /// No description provided for @personCurrencyBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency: {code}'**
+  String personCurrencyBadge(String code);
+
+  /// No description provided for @exchangeRates.
+  ///
+  /// In en, this message translates to:
+  /// **'Exchange rates'**
+  String get exchangeRates;
+
+  /// No description provided for @exchangeRatesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Define how much 1 unit of the base currency equals in other currencies. Used to estimate the dashboard total across mixed currencies.'**
+  String get exchangeRatesSubtitle;
+
+  /// No description provided for @baseCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Base currency'**
+  String get baseCurrency;
+
+  /// No description provided for @rate.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate'**
+  String get rate;
+
+  /// No description provided for @rateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'1 {base} = ? {code}'**
+  String rateHint(String base, String code);
+
+  /// No description provided for @mixedTotalNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Totals combine multiple currencies using the rates you set. They are estimates only.'**
+  String get mixedTotalNote;
+
+  /// No description provided for @saveRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Save rate'**
+  String get saveRate;
+
   /// No description provided for @net.
   ///
   /// In en, this message translates to:

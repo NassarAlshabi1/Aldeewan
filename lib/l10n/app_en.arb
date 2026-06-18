@@ -336,6 +336,31 @@
   "clearAllConfirmTitle": "Clear all notifications?",
   "clearAllConfirmMessage": "This will permanently delete all notifications. This action cannot be undone.",
   "clear": "Clear",
+  "personCurrency": "Currency",
+  "personCurrencyNote": "Transactions for this person will be tracked in this currency.",
+  "personCurrencyDialogBody": "Use the app's default currency, or pick a specific currency for this person.",
+  "useAppDefault": "Use app default",
+  "chooseCurrency": "Choose currency",
+  "appDefault": "default",
+  "personCurrencyBadge": "Currency: {code}",
+  "@personCurrencyBadge": {
+    "placeholders": {
+      "code": { "type": "String" }
+    }
+  },
+  "exchangeRates": "Exchange rates",
+  "exchangeRatesSubtitle": "Define how much 1 unit of the base currency equals in other currencies. Used to estimate the dashboard total across mixed currencies.",
+  "baseCurrency": "Base currency",
+  "rate": "Rate",
+  "rateHint": "1 {base} = ? {code}",
+  "@rateHint": {
+    "placeholders": {
+      "base": { "type": "String" },
+      "code": { "type": "String" }
+    }
+  },
+  "mixedTotalNote": "Totals combine multiple currencies using the rates you set. They are estimates only.",
+  "saveRate": "Save rate",
   "dailyReminder": "Daily Reminder",
   "dailyReminderSubtitle": "Get a daily reminder to record your transactions",
   "authenticateReason": "Please authenticate to access Aldeewan",
