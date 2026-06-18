@@ -23,13 +23,14 @@ class StockAlertService {
 
   /// Subscribe to inventory changes and emit notifications.
   ///
-  /// Returns a function that cancels the subscription.
-  VoidCallback start() {
-    return _ref.listen<InventoryState>(
+  /// Returns a function that cancels the subscription when called.
+  void Function() start() {
+    final subscription = _ref.listen<InventoryState>(
       inventoryProvider,
       (previous, next) => _onInventoryChanged(next),
       fireImmediately: false,
     );
+    return subscription.close;
   }
 
   void _onInventoryChanged(InventoryState state) {
