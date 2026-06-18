@@ -118,14 +118,37 @@ jobs:
         run: flutter pub get
 
       - name: 🧬 Generate code (build_runner)
-        # NOTE: We intentionally do NOT use --delete-conflicting-outputs.
-        # That flag would wipe our hand-maintained .realm.dart files
-        # (product_model.realm.dart, stock_movement_model.realm.dart) and
-        # replace them with whatever realm_generator emits — which has
-        # historically differed from what we ship in the repo, breaking
-        # the build (e.g. missing StockMovementModel class).
-        # Plain `build` only writes outputs that are out of date.
-        run: dart run build_runner build
+        # Use --delete-conflicting-outputs for freezed/json_serializable files
+        # that are truly generated. We then restore our hand-maintained
+        # .realm.dart files from a backup because realm_generator may emit
+        # different content than what we ship (e.g. missing StockMovementModel).
+        run: |
+          # Backup our hand-maintained realm.dart files
+          cp lib/data/models/product_model.realm.dart /tmp/product_model.realm.dart.bak
+          cp lib/data/models/stock_movement_model.realm.dart /tmp/stock_movement_model.realm.dart.bak
+          cp lib/data/models/person_model.realm.dart /tmp/person_model.realm.dart.bak
+          cp lib/data/models/transaction_model.realm.dart /tmp/transaction_model.realm.dart.bak
+          cp lib/data/models/budget_model.realm.dart /tmp/budget_model.realm.dart.bak
+          cp lib/data/models/savings_goal_model.realm.dart /tmp/savings_goal_model.realm.dart.bak
+          cp lib/data/models/category_model.realm.dart /tmp/category_model.realm.dart.bak
+          cp lib/data/models/notification_item_model.realm.dart /tmp/notification_item_model.realm.dart.bak
+          cp lib/data/models/financial_account_model.realm.dart /tmp/financial_account_model.realm.dart.bak
+
+          # Run build_runner (this may delete the .realm.dart files above)
+          dart run build_runner build --delete-conflicting-outputs
+
+          # Restore our hand-maintained .realm.dart files
+          cp /tmp/product_model.realm.dart.bak lib/data/models/product_model.realm.dart
+          cp /tmp/stock_movement_model.realm.dart.bak lib/data/models/stock_movement_model.realm.dart
+          cp /tmp/person_model.realm.dart.bak lib/data/models/person_model.realm.dart
+          cp /tmp/transaction_model.realm.dart.bak lib/data/models/transaction_model.realm.dart
+          cp /tmp/budget_model.realm.dart.bak lib/data/models/budget_model.realm.dart
+          cp /tmp/savings_goal_model.realm.dart.bak lib/data/models/savings_goal_model.realm.dart
+          cp /tmp/category_model.realm.dart.bak lib/data/models/category_model.realm.dart
+          cp /tmp/notification_item_model.realm.dart.bak lib/data/models/notification_item_model.realm.dart
+          cp /tmp/financial_account_model.realm.dart.bak lib/data/models/financial_account_model.realm.dart
+
+          echo "✅ build_runner done, .realm.dart files restored"
 
       ############################################################
       # 5.5) ضغط الصور (يقلل حجم APK)
