@@ -101,7 +101,7 @@ class _TransactionFormState extends ConsumerState<TransactionForm> {
     }
   }
 
-  void _save(AppLocalizations l10n) {
+  Future<void> _save(AppLocalizations l10n) async {
     if (_formKey.currentState!.validate()) {
       final cleanAmount = _amountController.text.replaceAll(',', '').replaceAll(' ', '');
       final amount = double.tryParse(cleanAmount);
@@ -380,7 +380,7 @@ class _TransactionFormState extends ConsumerState<TransactionForm> {
               ],
               SizedBox(height: 24.h),
               ElevatedButton(
-                onPressed: () => _save(l10n),
+                onPressed: () { _save(l10n); },
                 child: Text(l10n.save),
               ),
               SizedBox(height: 16.h),
