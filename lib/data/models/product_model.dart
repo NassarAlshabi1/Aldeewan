@@ -22,3 +22,43 @@ class _ProductModel {
   late DateTime updatedAt;
   late bool isArchived = false;
 }
+
+/// Mapper for [ProductModel] ↔ [Product].
+///
+/// Lives in this file (not the generated `.realm.dart`) so it survives
+/// `build_runner` regeneration.
+extension ProductModelMapper on ProductModel {
+  Product toEntity() {
+    return Product(
+      id: id,
+      name: name,
+      sku: sku,
+      category: category,
+      unit: unit,
+      costPrice: costPrice,
+      salePrice: salePrice,
+      currencyCode: currencyCode,
+      lowStockThreshold: lowStockThreshold,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+      isArchived: isArchived,
+    );
+  }
+}
+
+ProductModel productModelFromEntity(Product product) {
+  return ProductModel(
+    product.id,
+    product.name,
+    product.createdAt,
+    product.updatedAt,
+    isArchived: product.isArchived,
+    sku: product.sku,
+    category: product.category,
+    unit: product.unit,
+    costPrice: product.costPrice,
+    salePrice: product.salePrice,
+    currencyCode: product.currencyCode,
+    lowStockThreshold: product.lowStockThreshold,
+  );
+}
