@@ -11,15 +11,22 @@ part of 'person_model.dart';
 // ignore_for_file: type=lint
 class PersonModel extends _PersonModel
     with RealmEntity, RealmObjectBase, RealmObject {
+  static var _defaultsSet = false;
+
   PersonModel(
     String id,
     String role,
     String name,
-    DateTime createdAt,
-    bool isArchived, {
+    DateTime createdAt, {
     String? phone,
+    bool isArchived = false,
     String? currencyCode,
   }) {
+    if (!_defaultsSet) {
+      _defaultsSet = RealmObjectBase.setDefaults<PersonModel>({
+        'isArchived': false,
+      });
+    }
     RealmObjectBase.set(this, 'id', id);
     RealmObjectBase.set(this, 'role', role);
     RealmObjectBase.set(this, 'name', name);
@@ -59,11 +66,9 @@ class PersonModel extends _PersonModel
       RealmObjectBase.set(this, 'createdAt', value);
 
   @override
-  bool get isArchived =>
-      RealmObjectBase.get<bool>(this, 'isArchived') as bool;
+  bool get isArchived => RealmObjectBase.get<bool>(this, 'isArchived') as bool;
   @override
-  set isArchived(bool value) =>
-      RealmObjectBase.set(this, 'isArchived', value);
+  set isArchived(bool value) => RealmObjectBase.set(this, 'isArchived', value);
 
   @override
   String? get currencyCode =>
@@ -105,15 +110,14 @@ class PersonModel extends _PersonModel
         'role': EJsonValue role,
         'name': EJsonValue name,
         'createdAt': EJsonValue createdAt,
-        'isArchived': EJsonValue isArchived,
       } =>
         PersonModel(
           fromEJson(id),
           fromEJson(role),
           fromEJson(name),
           fromEJson(createdAt),
-          fromEJson(isArchived),
           phone: fromEJson(ejson['phone']),
+          isArchived: fromEJson(ejson['isArchived'], defaultValue: false),
           currencyCode: fromEJson(ejson['currencyCode']),
         ),
       _ => raiseInvalidEJson(ejson),
@@ -134,7 +138,11 @@ class PersonModel extends _PersonModel
         SchemaProperty('phone', RealmPropertyType.string, optional: true),
         SchemaProperty('createdAt', RealmPropertyType.timestamp),
         SchemaProperty('isArchived', RealmPropertyType.bool),
-        SchemaProperty('currencyCode', RealmPropertyType.string, optional: true),
+        SchemaProperty(
+          'currencyCode',
+          RealmPropertyType.string,
+          optional: true,
+        ),
       ],
     );
   }();

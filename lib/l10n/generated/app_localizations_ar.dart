@@ -21,6 +21,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get home => 'الرئيسية';
 
   @override
+  String get net => 'الصافي';
+
+  @override
   String get ledger => 'الدفتر';
 
   @override
@@ -196,7 +199,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get note => 'ملاحظة';
 
   @override
-  String get category => 'التصنيف';
+  String get category => 'الفئة';
 
   @override
   String get type => 'النوع';
@@ -890,7 +893,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get clearAllConfirmTitle => 'مسح جميع الإشعارات؟';
 
   @override
-  String get clearAllConfirmMessage => 'سيتم حذف جميع الإشعارات نهائياً. لا يمكن التراجع عن هذا الإجراء.';
+  String get clearAllConfirmMessage =>
+      'سيتم حذف جميع الإشعارات نهائياً. لا يمكن التراجع عن هذا الإجراء.';
 
   @override
   String get clear => 'مسح';
@@ -902,7 +906,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get personCurrencyNote => 'سيتم تتبع معاملات هذا الشخص بهذه العملة.';
 
   @override
-  String get personCurrencyDialogBody => 'استخدم العملة الافتراضية للتطبيق، أو اختر عملة محددة لهذا الشخص.';
+  String get personCurrencyDialogBody =>
+      'استخدم العملة الافتراضية للتطبيق، أو اختر عملة محددة لهذا الشخص.';
 
   @override
   String get useAppDefault => 'استخدم الافتراضية';
@@ -914,13 +919,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get appDefault => 'افتراضية';
 
   @override
-  String personCurrencyBadge(String code) => 'العملة: $code';
+  String personCurrencyBadge(String code) {
+    return 'العملة: $code';
+  }
 
   @override
   String get exchangeRates => 'أسعار الصرف';
 
   @override
-  String get exchangeRatesSubtitle => 'حدد كم يساوي 1 وحدة من العملة الأساسية بالعملات الأخرى. يُستخدم لتقدير المجموع الكلي عبر العملات المختلطة.';
+  String get exchangeRatesSubtitle =>
+      'حدد كم يساوي 1 وحدة من العملة الأساسية بالعملات الأخرى. يُستخدم لتقدير المجموع الكلي عبر العملات المختلطة.';
 
   @override
   String get baseCurrency => 'العملة الأساسية';
@@ -929,10 +937,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get rate => 'السعر';
 
   @override
-  String rateHint(String base, String code) => '1 $base = كم $code';
+  String rateHint(String base, String code) {
+    return '1 $base = كم $code';
+  }
 
   @override
-  String get mixedTotalNote => 'المجاميع تجمع عملات مختلفة باستخدام الأسعار التي حددتها. وهي تقديرية فقط.';
+  String get mixedTotalNote =>
+      'المجاميع تجمع عملات مختلفة باستخدام الأسعار التي حددتها. وهي تقديرية فقط.';
 
   @override
   String get saveRate => 'حفظ السعر';
@@ -962,9 +973,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get sku => 'رمز المنتج (SKU)';
 
   @override
-  String get category => 'الفئة';
-
-  @override
   String get unit => 'الوحدة';
 
   @override
@@ -977,7 +985,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get lowStockThreshold => 'حد التنبيه لنقص المخزون';
 
   @override
-  String get lowStockThresholdHint => 'تنبيه عند انخفاض الكمية المتوفرة إلى هذا الحد أو أقل. اتركه فارغاً لتعطيل التنبيه.';
+  String get lowStockThresholdHint =>
+      'تنبيه عند انخفاض الكمية المتوفرة إلى هذا الحد أو أقل. اتركه فارغاً لتعطيل التنبيه.';
 
   @override
   String get quantityOnHand => 'الكمية المتوفرة';
@@ -1034,16 +1043,20 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deleteProductTitle => 'حذف المنتج؟';
 
   @override
-  String get deleteProductMessage => 'سيتم حذف المنتج وجميع حركات مخزونه نهائياً. لا يمكن التراجع عن هذا الإجراء.';
+  String get deleteProductMessage =>
+      'سيتم حذف المنتج وجميع حركات مخزونه نهائياً. لا يمكن التراجع عن هذا الإجراء.';
 
   @override
   String get deleteMovementTitle => 'حذف حركة المخزون؟';
 
   @override
-  String get deleteMovementMessage => 'سيتم إعادة حساب الكمية المتوفرة للمنتج. لا يمكن التراجع عن هذا الإجراء.';
+  String get deleteMovementMessage =>
+      'سيتم إعادة حساب الكمية المتوفرة للمنتج. لا يمكن التراجع عن هذا الإجراء.';
 
   @override
-  String insufficientStock(String available, String unit) => 'مخزون غير كافٍ. المتوفر: $available $unit';
+  String insufficientStock(String available, String unit) {
+    return 'مخزون غير كافٍ. المتوفر: $available $unit';
+  }
 
   @override
   String get stockValue => 'قيمة المخزون';
@@ -1059,9 +1072,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get searchProducts => 'ابحث عن منتج';
-
-  @override
-  String get net => 'الصافي';
 
   @override
   String get dailyReminder => 'تذكير يومي';
@@ -1589,4 +1599,46 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get schemaVersionMismatch =>
       'النسخة الاحتياطية من إصدار أحدث للتطبيق. يرجى تحديث الديوان.';
+
+  @override
+  String get calendar => 'التقويم';
+
+  @override
+  String get previousMonth => 'الشهر السابق';
+
+  @override
+  String get nextMonth => 'الشهر التالي';
+
+  @override
+  String get splitBill => 'تقسيم الفاتورة';
+
+  @override
+  String get totalAmount => 'المبلغ الإجمالي';
+
+  @override
+  String get equal => 'تساوي';
+
+  @override
+  String get percentage => 'نسبة مئوية';
+
+  @override
+  String get exact => 'مبلغ محدد';
+
+  @override
+  String get participants => 'المشاركون';
+
+  @override
+  String get share => 'الحصة';
+
+  @override
+  String get fullyAllocated => 'تم توزيع الكل';
+
+  @override
+  String get splitBillSaved => 'تم حفظ تقسيم الفاتورة بنجاح';
+
+  @override
+  String get noTransactions => 'لا توجد معاملات';
+
+  @override
+  String get transactions => 'المعاملات';
 }

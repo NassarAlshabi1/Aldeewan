@@ -683,6 +683,7 @@
   "remaining": "Remaining",
   "fullyAllocated": "Fully Allocated",
   "splitBillSaved": "Split bill saved successfully",
-  "noTransactions": "No transactions"
+  "noTransactions": "No transactions",
+  "transactions": "Transactions"
 }
 

@@ -1,6 +1,5 @@
 import 'package:realm/realm.dart' hide Transaction;
 import 'package:aldeewan_mobile/domain/entities/product.dart';
-import 'package:aldeewan_mobile/data/models/product_model.dart';
 
 part 'stock_movement_model.realm.dart';
 

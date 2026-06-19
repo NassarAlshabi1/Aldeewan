@@ -574,6 +574,7 @@
   "remaining": "المتبقي",
   "fullyAllocated": "تم توزيع الكل",
   "splitBillSaved": "تم حفظ تقسيم الفاتورة بنجاح",
-  "noTransactions": "لا توجد معاملات"
+  "noTransactions": "لا توجد معاملات",
+  "transactions": "المعاملات"
 }
 

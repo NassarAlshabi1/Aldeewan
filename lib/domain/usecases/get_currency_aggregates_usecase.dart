@@ -1,6 +1,4 @@
 import 'package:aldeewan_mobile/domain/entities/person.dart';
-import 'package:aldeewan_mobile/domain/entities/transaction.dart';
-
 /// Aggregated balances grouped by currency code.
 ///
 /// Used by the dashboard to show "Total Receivable" / "Total Payable"

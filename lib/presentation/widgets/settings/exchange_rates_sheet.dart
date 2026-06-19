@@ -6,7 +6,6 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import 'package:aldeewan_mobile/data/services/exchange_rate_service.dart';
 import 'package:aldeewan_mobile/l10n/generated/app_localizations.dart';
-import 'package:aldeewan_mobile/presentation/providers/currency_provider.dart';
 import 'package:aldeewan_mobile/data/models/currency_data.dart';
 import 'package:aldeewan_mobile/utils/toast_service.dart';
 

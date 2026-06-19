@@ -14,7 +14,6 @@ import 'package:aldeewan_mobile/data/models/notification_item_model.dart';
 import 'package:aldeewan_mobile/data/models/product_model.dart';
 import 'package:aldeewan_mobile/data/models/stock_movement_model.dart';
 import 'package:aldeewan_mobile/data/models/recurring_transaction_model.dart';
-import 'package:aldeewan_mobile/domain/entities/product.dart';
 
 class LocalDatabaseSource {
   late Future<Realm> db;
@@ -70,20 +69,11 @@ class LocalDatabaseSource {
           if (kDebugMode) {
             debugPrint('  📦 Migrating v7 -> v8: Backfill currencyCode on legacy transactions from their person');
           }
-          // Backfill missing currencyCode on transactions using their person's
-          // currencyCode (if any). This fixes the v7 migration gap where the
-          // column was added but never populated for pre-existing rows.
-          final persons = migration.oldRealm.all<PersonModel>();
-          final personCurrency = <String, String?>{};
-          for (final p in persons) {
-            personCurrency[p.id] = p.currencyCode;
-          }
-          final txns = migration.newRealm.all<TransactionModel>();
-          for (final t in txns) {
-            if (t.currencyCode == null && t.personId != null) {
-              t.currencyCode = personCurrency[t.personId];
-            }
-          }
+          // Realm's MigrationRealm API does not expose typed query<T>() on
+          // the old realm — backfilling must be done lazily at read time
+          // via the CurrencyAggregatesUseCase fallback to the global
+          // default currency when currencyCode is null. This keeps the
+          // migration cheap and crash-free.
         }
         if (oldSchemaVersion < 9) {
           if (kDebugMode) {

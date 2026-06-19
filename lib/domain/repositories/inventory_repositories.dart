@@ -1,3 +1,4 @@
+import 'package:realm/realm.dart';
 import 'package:aldeewan_mobile/data/models/budget_model.dart';
 import 'package:aldeewan_mobile/data/models/category_model.dart';
 import 'package:aldeewan_mobile/data/models/financial_account_model.dart';
@@ -5,7 +6,6 @@ import 'package:aldeewan_mobile/data/models/notification_item_model.dart';
 import 'package:aldeewan_mobile/data/models/product_model.dart';
 import 'package:aldeewan_mobile/data/models/stock_movement_model.dart';
 import 'package:aldeewan_mobile/data/models/savings_goal_model.dart';
-import 'package:aldeewan_mobile/domain/entities/product.dart';
 
 /// Contract for the Budget repository.
 abstract class BudgetRepository {

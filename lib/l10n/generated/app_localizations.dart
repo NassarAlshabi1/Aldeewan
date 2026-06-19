@@ -122,6 +122,12 @@ abstract class AppLocalizations {
   /// **'Home'**
   String get home;
 
+  /// No description provided for @net.
+  ///
+  /// In en, this message translates to:
+  /// **'Net'**
+  String get net;
+
   /// No description provided for @ledger.
   ///
   /// In en, this message translates to:
@@ -1928,12 +1934,6 @@ abstract class AppLocalizations {
   /// **'SKU'**
   String get sku;
 
-  /// No description provided for @category.
-  ///
-  /// In en, this message translates to:
-  /// **'Category'**
-  String get category;
-
   /// No description provided for @unit.
   ///
   /// In en, this message translates to:
@@ -2087,7 +2087,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteMovementMessage.
   ///
   /// In en, this message translates to:
-  /// **'This will recalculate the product's quantity on hand. This cannot be undone.'**
+  /// **'This will recalculate the product\'s quantity on hand. This cannot be undone.'**
   String get deleteMovementMessage;
 
   /// No description provided for @insufficientStock.
@@ -2125,12 +2125,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search products'**
   String get searchProducts;
-
-  /// No description provided for @net.
-  ///
-  /// In en, this message translates to:
-  /// **'Net'**
-  String get net;
 
   /// No description provided for @dailyReminder.
   ///
@@ -3077,6 +3071,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Backup is from a newer version of the app. Please update Aldeewan.'**
   String get schemaVersionMismatch;
+
+  /// No description provided for @calendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar'**
+  String get calendar;
+
+  /// No description provided for @previousMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous Month'**
+  String get previousMonth;
+
+  /// No description provided for @nextMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Next Month'**
+  String get nextMonth;
+
+  /// No description provided for @splitBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Split Bill'**
+  String get splitBill;
+
+  /// No description provided for @totalAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Amount'**
+  String get totalAmount;
+
+  /// No description provided for @equal.
+  ///
+  /// In en, this message translates to:
+  /// **'Equal'**
+  String get equal;
+
+  /// No description provided for @percentage.
+  ///
+  /// In en, this message translates to:
+  /// **'Percentage'**
+  String get percentage;
+
+  /// No description provided for @exact.
+  ///
+  /// In en, this message translates to:
+  /// **'Exact'**
+  String get exact;
+
+  /// No description provided for @participants.
+  ///
+  /// In en, this message translates to:
+  /// **'Participants'**
+  String get participants;
+
+  /// No description provided for @share.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get share;
+
+  /// No description provided for @fullyAllocated.
+  ///
+  /// In en, this message translates to:
+  /// **'Fully Allocated'**
+  String get fullyAllocated;
+
+  /// No description provided for @splitBillSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Split bill saved successfully'**
+  String get splitBillSaved;
+
+  /// No description provided for @noTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions'**
+  String get noTransactions;
+
+  /// No description provided for @transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions'**
+  String get transactions;
 }
 
 class _AppLocalizationsDelegate

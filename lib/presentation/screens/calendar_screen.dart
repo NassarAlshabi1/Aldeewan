@@ -28,7 +28,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final l10n = AppLocalizations.of(context)!;
     final ledgerAsync = ref.watch(ledgerProvider);
     final currency = ref.watch(currencyProvider);
-    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -155,7 +154,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                             : LucideIcons.arrowUpRight,
                         color: isIncome ? AppColors.success : AppColors.error,
                       ),
-                      title: Text(t.note ?? t.type),
+                      title: Text(t.note ?? t.type.name),
                       subtitle: Text(t.category ?? ''),
                       trailing: Text(
                         '${isIncome ? '+' : '-'}${CurrencyFormatter.format(t.amount, currency)}',

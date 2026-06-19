@@ -11,7 +11,6 @@ import 'package:aldeewan_mobile/domain/entities/person.dart';
 import 'package:aldeewan_mobile/presentation/providers/ledger_provider.dart';
 import 'package:aldeewan_mobile/utils/input_formatters.dart';
 import 'package:aldeewan_mobile/presentation/providers/dependency_injection.dart';
-import 'package:aldeewan_mobile/domain/repositories/transaction_repository.dart';
 
 /// Screen that splits a bill between N people by equal shares, weighted
 /// shares, or exact amounts. Each share is persisted as a separate

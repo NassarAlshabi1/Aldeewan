@@ -11,6 +11,8 @@ part of 'transaction_model.dart';
 // ignore_for_file: type=lint
 class TransactionModel extends _TransactionModel
     with RealmEntity, RealmObjectBase, RealmObject {
+  static var _defaultsSet = false;
+
   TransactionModel(
     String uuid,
     String type,
@@ -27,6 +29,11 @@ class TransactionModel extends _TransactionModel
     bool isOpeningBalance = false,
     String? currencyCode,
   }) {
+    if (!_defaultsSet) {
+      _defaultsSet = RealmObjectBase.setDefaults<TransactionModel>({
+        'isOpeningBalance': false,
+      });
+    }
     RealmObjectBase.set(this, 'uuid', uuid);
     RealmObjectBase.set(this, 'type', type);
     RealmObjectBase.set(this, 'personId', personId);
@@ -179,7 +186,10 @@ class TransactionModel extends _TransactionModel
           status: fromEJson(ejson['status']),
           accountId: fromEJson(ejson['accountId']),
           goalId: fromEJson(ejson['goalId']),
-          isOpeningBalance: fromEJson(ejson['isOpeningBalance'], defaultValue: false),
+          isOpeningBalance: fromEJson(
+            ejson['isOpeningBalance'],
+            defaultValue: false,
+          ),
           currencyCode: fromEJson(ejson['currencyCode']),
         ),
       _ => raiseInvalidEJson(ejson),
@@ -203,7 +213,11 @@ class TransactionModel extends _TransactionModel
           indexType: RealmIndexType.regular,
         ),
         SchemaProperty('amount', RealmPropertyType.double),
-        SchemaProperty('date', RealmPropertyType.timestamp),
+        SchemaProperty(
+          'date',
+          RealmPropertyType.timestamp,
+          indexType: RealmIndexType.regular,
+        ),
         SchemaProperty('category', RealmPropertyType.string, optional: true),
         SchemaProperty('note', RealmPropertyType.string, optional: true),
         SchemaProperty('dueDate', RealmPropertyType.timestamp, optional: true),

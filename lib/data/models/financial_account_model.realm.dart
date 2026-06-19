@@ -163,7 +163,11 @@ class FinancialAccountModel extends _FinancialAccountModel
       [
         SchemaProperty('id', RealmPropertyType.int, primaryKey: true),
         SchemaProperty('name', RealmPropertyType.string),
-        SchemaProperty('providerId', RealmPropertyType.string),
+        SchemaProperty(
+          'providerId',
+          RealmPropertyType.string,
+          indexType: RealmIndexType.regular,
+        ),
         SchemaProperty('accountType', RealmPropertyType.string),
         SchemaProperty('balance', RealmPropertyType.double),
         SchemaProperty('currency', RealmPropertyType.string),

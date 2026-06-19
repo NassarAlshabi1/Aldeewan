@@ -114,8 +114,8 @@ class InventoryNotifier extends StateNotifier<InventoryState> {
       }).toList();
 
       state = InventoryState(products: result, isLoading: false);
-    } catch (e, s) {
-      debugPrint('❌ InventoryNotifier recompute error: $e');
+    } catch (e) {
+      if (kDebugMode) debugPrint('❌ InventoryNotifier recompute error: $e');
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }

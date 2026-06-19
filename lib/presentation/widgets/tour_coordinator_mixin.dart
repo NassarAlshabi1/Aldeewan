@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:aldeewan_mobile/presentation/providers/guided_tour_provider.dart';
-import 'package:aldeewan_mobile/presentation/widgets/showcase_wrapper.dart';
 
 /// Mixin that consolidates the boilerplate needed by every screen that
 /// participates in the cross-screen guided tour.

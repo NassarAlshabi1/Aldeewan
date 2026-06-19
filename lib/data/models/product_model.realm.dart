@@ -11,6 +11,8 @@ part of 'product_model.dart';
 // ignore_for_file: type=lint
 class ProductModel extends _ProductModel
     with RealmEntity, RealmObjectBase, RealmObject {
+  static var _defaultsSet = false;
+
   ProductModel(
     String id,
     String name,
@@ -25,6 +27,11 @@ class ProductModel extends _ProductModel
     double? lowStockThreshold,
     bool isArchived = false,
   }) {
+    if (!_defaultsSet) {
+      _defaultsSet = RealmObjectBase.setDefaults<ProductModel>({
+        'isArchived': false,
+      });
+    }
     RealmObjectBase.set(this, 'id', id);
     RealmObjectBase.set(this, 'name', name);
     RealmObjectBase.set(this, 'sku', sku);
@@ -71,15 +78,13 @@ class ProductModel extends _ProductModel
   double? get costPrice =>
       RealmObjectBase.get<double>(this, 'costPrice') as double?;
   @override
-  set costPrice(double? value) =>
-      RealmObjectBase.set(this, 'costPrice', value);
+  set costPrice(double? value) => RealmObjectBase.set(this, 'costPrice', value);
 
   @override
   double? get salePrice =>
       RealmObjectBase.get<double>(this, 'salePrice') as double?;
   @override
-  set salePrice(double? value) =>
-      RealmObjectBase.set(this, 'salePrice', value);
+  set salePrice(double? value) => RealmObjectBase.set(this, 'salePrice', value);
 
   @override
   String? get currencyCode =>
@@ -110,11 +115,9 @@ class ProductModel extends _ProductModel
       RealmObjectBase.set(this, 'updatedAt', value);
 
   @override
-  bool get isArchived =>
-      RealmObjectBase.get<bool>(this, 'isArchived') as bool;
+  bool get isArchived => RealmObjectBase.get<bool>(this, 'isArchived') as bool;
   @override
-  set isArchived(bool value) =>
-      RealmObjectBase.set(this, 'isArchived', value);
+  set isArchived(bool value) => RealmObjectBase.set(this, 'isArchived', value);
 
   @override
   Stream<RealmObjectChanges<ProductModel>> get changes =>
@@ -188,8 +191,16 @@ class ProductModel extends _ProductModel
         SchemaProperty('unit', RealmPropertyType.string, optional: true),
         SchemaProperty('costPrice', RealmPropertyType.double, optional: true),
         SchemaProperty('salePrice', RealmPropertyType.double, optional: true),
-        SchemaProperty('currencyCode', RealmPropertyType.string, optional: true),
-        SchemaProperty('lowStockThreshold', RealmPropertyType.double, optional: true),
+        SchemaProperty(
+          'currencyCode',
+          RealmPropertyType.string,
+          optional: true,
+        ),
+        SchemaProperty(
+          'lowStockThreshold',
+          RealmPropertyType.double,
+          optional: true,
+        ),
         SchemaProperty('createdAt', RealmPropertyType.timestamp),
         SchemaProperty('updatedAt', RealmPropertyType.timestamp),
         SchemaProperty('isArchived', RealmPropertyType.bool),

@@ -1,9 +1,9 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:aldeewan_mobile/presentation/providers/dependency_injection.dart';
 import 'package:aldeewan_mobile/presentation/providers/inventory_provider.dart';
 import 'package:aldeewan_mobile/presentation/providers/notification_history_provider.dart';
 

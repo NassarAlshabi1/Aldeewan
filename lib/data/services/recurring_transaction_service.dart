@@ -1,13 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:realm/realm.dart';
+import 'package:realm/realm.dart' hide Uuid;
 import 'package:uuid/uuid.dart';
 
 import 'package:aldeewan_mobile/data/models/recurring_transaction_model.dart';
 import 'package:aldeewan_mobile/data/models/transaction_model.dart';
 import 'package:aldeewan_mobile/domain/entities/transaction.dart';
 import 'package:aldeewan_mobile/presentation/providers/database_provider.dart';
-import 'package:aldeewan_mobile/presentation/providers/dependency_injection.dart';
 
 /// Provider exposing the singleton [RecurringTransactionService].
 final recurringTransactionServiceProvider =

@@ -46,8 +46,7 @@ class StockMovementModel extends _StockMovementModel
   String get productId =>
       RealmObjectBase.get<String>(this, 'productId') as String;
   @override
-  set productId(String value) =>
-      RealmObjectBase.set(this, 'productId', value);
+  set productId(String value) => RealmObjectBase.set(this, 'productId', value);
 
   @override
   String get type => RealmObjectBase.get<String>(this, 'type') as String;
@@ -64,15 +63,13 @@ class StockMovementModel extends _StockMovementModel
   double? get unitCost =>
       RealmObjectBase.get<double>(this, 'unitCost') as double?;
   @override
-  set unitCost(double? value) =>
-      RealmObjectBase.set(this, 'unitCost', value);
+  set unitCost(double? value) => RealmObjectBase.set(this, 'unitCost', value);
 
   @override
   String? get personId =>
       RealmObjectBase.get<String>(this, 'personId') as String?;
   @override
-  set personId(String? value) =>
-      RealmObjectBase.set(this, 'personId', value);
+  set personId(String? value) => RealmObjectBase.set(this, 'personId', value);
 
   @override
   String? get transactionId =>
@@ -82,8 +79,7 @@ class StockMovementModel extends _StockMovementModel
       RealmObjectBase.set(this, 'transactionId', value);
 
   @override
-  DateTime get date =>
-      RealmObjectBase.get<DateTime>(this, 'date') as DateTime;
+  DateTime get date => RealmObjectBase.get<DateTime>(this, 'date') as DateTime;
   @override
   set date(DateTime value) => RealmObjectBase.set(this, 'date', value);
 
@@ -164,14 +160,30 @@ class StockMovementModel extends _StockMovementModel
       'StockMovementModel',
       [
         SchemaProperty('id', RealmPropertyType.string, primaryKey: true),
-        SchemaProperty('productId', RealmPropertyType.string,
-            indexType: RealmIndexType.regular),
+        SchemaProperty(
+          'productId',
+          RealmPropertyType.string,
+          indexType: RealmIndexType.regular,
+        ),
         SchemaProperty('type', RealmPropertyType.string),
         SchemaProperty('quantity', RealmPropertyType.double),
         SchemaProperty('unitCost', RealmPropertyType.double, optional: true),
-        SchemaProperty('personId', RealmPropertyType.string, optional: true),
-        SchemaProperty('transactionId', RealmPropertyType.string, optional: true),
-        SchemaProperty('date', RealmPropertyType.timestamp),
+        SchemaProperty(
+          'personId',
+          RealmPropertyType.string,
+          optional: true,
+          indexType: RealmIndexType.regular,
+        ),
+        SchemaProperty(
+          'transactionId',
+          RealmPropertyType.string,
+          optional: true,
+        ),
+        SchemaProperty(
+          'date',
+          RealmPropertyType.timestamp,
+          indexType: RealmIndexType.regular,
+        ),
         SchemaProperty('note', RealmPropertyType.string, optional: true),
         SchemaProperty('createdAt', RealmPropertyType.timestamp),
       ],

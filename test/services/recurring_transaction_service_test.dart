@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:aldeewan_mobile/data/services/recurring_transaction_service.dart';
+import 'package:aldeewan_mobile/data/models/recurring_transaction_model.dart';
 
 void main() {
   group('RecurringTransactionService._advance (via static helper)', () {

@@ -13,7 +13,7 @@ import 'package:aldeewan_mobile/data/models/stock_movement_model.dart';
 import 'package:aldeewan_mobile/data/models/transaction_model.dart';
 import 'package:encrypt/encrypt.dart' as enc;
 import 'package:flutter/foundation.dart';
-import 'package:realm/realm.dart';
+import 'package:realm/realm.dart' hide Uuid;
 import 'package:uuid/uuid.dart';
 
 enum RestoreStrategy {
@@ -430,7 +430,7 @@ class BackupService {
         m['role'] ?? 'customer',
         m['name'] ?? 'Unknown',
         DateTime.tryParse(m['createdAt'] ?? '') ?? DateTime.now(),
-        m['isArchived'] ?? false,
+        isArchived: m['isArchived'] ?? false,
         phone: m['phone']?.toString(),
         currencyCode: m['currencyCode']?.toString(),
       );

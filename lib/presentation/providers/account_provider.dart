@@ -6,7 +6,7 @@ import 'package:aldeewan_mobile/data/datasources/mock_bank_provider.dart';
 import 'package:aldeewan_mobile/data/models/financial_account_model.dart';
 import 'package:aldeewan_mobile/presentation/providers/database_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:realm/realm.dart';
+import 'package:realm/realm.dart' hide Uuid;
 import 'package:uuid/uuid.dart';
 
 final accountProvider = StateNotifierProvider<AccountNotifier, List<FinancialAccountModel>>((ref) {

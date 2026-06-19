@@ -21,6 +21,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get home => 'Home';
 
   @override
+  String get net => 'Net';
+
+  @override
   String get ledger => 'Ledger';
 
   @override
@@ -895,7 +898,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clearAllConfirmTitle => 'Clear all notifications?';
 
   @override
-  String get clearAllConfirmMessage => 'This will permanently delete all notifications. This action cannot be undone.';
+  String get clearAllConfirmMessage =>
+      'This will permanently delete all notifications. This action cannot be undone.';
 
   @override
   String get clear => 'Clear';
@@ -904,10 +908,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get personCurrency => 'Currency';
 
   @override
-  String get personCurrencyNote => 'Transactions for this person will be tracked in this currency.';
+  String get personCurrencyNote =>
+      'Transactions for this person will be tracked in this currency.';
 
   @override
-  String get personCurrencyDialogBody => 'Use the app\'s default currency, or pick a specific currency for this person.';
+  String get personCurrencyDialogBody =>
+      'Use the app\'s default currency, or pick a specific currency for this person.';
 
   @override
   String get useAppDefault => 'Use app default';
@@ -919,13 +925,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appDefault => 'default';
 
   @override
-  String personCurrencyBadge(String code) => 'Currency: $code';
+  String personCurrencyBadge(String code) {
+    return 'Currency: $code';
+  }
 
   @override
   String get exchangeRates => 'Exchange rates';
 
   @override
-  String get exchangeRatesSubtitle => 'Define how much 1 unit of the base currency equals in other currencies. Used to estimate the dashboard total across mixed currencies.';
+  String get exchangeRatesSubtitle =>
+      'Define how much 1 unit of the base currency equals in other currencies. Used to estimate the dashboard total across mixed currencies.';
 
   @override
   String get baseCurrency => 'Base currency';
@@ -934,10 +943,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rate => 'Rate';
 
   @override
-  String rateHint(String base, String code) => '1 $base = ? $code';
+  String rateHint(String base, String code) {
+    return '1 $base = ? $code';
+  }
 
   @override
-  String get mixedTotalNote => 'Totals combine multiple currencies using the rates you set. They are estimates only.';
+  String get mixedTotalNote =>
+      'Totals combine multiple currencies using the rates you set. They are estimates only.';
 
   @override
   String get saveRate => 'Save rate';
@@ -967,9 +979,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sku => 'SKU';
 
   @override
-  String get category => 'Category';
-
-  @override
   String get unit => 'Unit';
 
   @override
@@ -982,7 +991,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lowStockThreshold => 'Low-stock threshold';
 
   @override
-  String get lowStockThresholdHint => 'Alert when quantity on hand drops to or below this value. Leave empty to disable alerts.';
+  String get lowStockThresholdHint =>
+      'Alert when quantity on hand drops to or below this value. Leave empty to disable alerts.';
 
   @override
   String get quantityOnHand => 'Quantity on hand';
@@ -1030,7 +1040,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noProductsYet => 'No products yet';
 
   @override
-  String get noProductsHint => 'Add your first product to start tracking inventory.';
+  String get noProductsHint =>
+      'Add your first product to start tracking inventory.';
 
   @override
   String get noMovementsYet => 'No stock movements yet';
@@ -1039,16 +1050,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteProductTitle => 'Delete product?';
 
   @override
-  String get deleteProductMessage => 'This will permanently delete the product and all its stock movements. This cannot be undone.';
+  String get deleteProductMessage =>
+      'This will permanently delete the product and all its stock movements. This cannot be undone.';
 
   @override
   String get deleteMovementTitle => 'Delete stock movement?';
 
   @override
-  String get deleteMovementMessage => 'This will recalculate the product\'s quantity on hand. This cannot be undone.';
+  String get deleteMovementMessage =>
+      'This will recalculate the product\'s quantity on hand. This cannot be undone.';
 
   @override
-  String insufficientStock(String available, String unit) => 'Insufficient stock. Available: $available $unit';
+  String insufficientStock(String available, String unit) {
+    return 'Insufficient stock. Available: $available $unit';
+  }
 
   @override
   String get stockValue => 'Stock value';
@@ -1064,9 +1079,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchProducts => 'Search products';
-
-  @override
-  String get net => 'Net';
 
   @override
   String get dailyReminder => 'Daily Reminder';
@@ -1596,4 +1608,46 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get schemaVersionMismatch =>
       'Backup is from a newer version of the app. Please update Aldeewan.';
+
+  @override
+  String get calendar => 'Calendar';
+
+  @override
+  String get previousMonth => 'Previous Month';
+
+  @override
+  String get nextMonth => 'Next Month';
+
+  @override
+  String get splitBill => 'Split Bill';
+
+  @override
+  String get totalAmount => 'Total Amount';
+
+  @override
+  String get equal => 'Equal';
+
+  @override
+  String get percentage => 'Percentage';
+
+  @override
+  String get exact => 'Exact';
+
+  @override
+  String get participants => 'Participants';
+
+  @override
+  String get share => 'Share';
+
+  @override
+  String get fullyAllocated => 'Fully Allocated';
+
+  @override
+  String get splitBillSaved => 'Split bill saved successfully';
+
+  @override
+  String get noTransactions => 'No transactions';
+
+  @override
+  String get transactions => 'Transactions';
 }

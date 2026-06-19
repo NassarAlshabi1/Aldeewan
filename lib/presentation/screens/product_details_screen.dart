@@ -15,7 +15,6 @@ import 'package:aldeewan_mobile/presentation/widgets/empty_state.dart';
 import 'package:aldeewan_mobile/presentation/widgets/product_form.dart';
 import 'package:aldeewan_mobile/presentation/widgets/stock_movement_form.dart';
 import 'package:aldeewan_mobile/config/app_colors.dart';
-import 'package:aldeewan_mobile/utils/toast_service.dart';
 import 'package:aldeewan_mobile/presentation/widgets/dual_date_text.dart';
 
 /// Shows full details for a single product plus its complete movement history.

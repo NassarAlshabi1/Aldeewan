@@ -31,16 +31,15 @@ class ParsedReceipt {
 
 /// Receipt OCR + parser.
 ///
-/// Uses **both** Latin and Arabic script recognisers so the service works
-/// on receipts from the MENA region (the app's primary market). Arabic
-/// keyword patterns like `المبلغ` / `الإجمالي` are now actually matchable
-/// because the Arabic recogniser returns text for Arabic-script receipts.
+/// Uses the Latin script recogniser. Note: `google_mlkit_text_recognition`
+/// 0.15.0 supports Latin / Chinese / Devanagari / Japanese / Korean only —
+/// Arabic is not yet supported by ML Kit's on-device recogniser. When
+/// Arabic support lands in the plugin, switch to running a second
+/// recogniser and concatenating results.
 class ReceiptScannerService {
   final ImagePicker _picker = ImagePicker();
   final TextRecognizer _latinRecognizer =
       TextRecognizer(script: TextRecognitionScript.latin);
-  final TextRecognizer _arabicRecognizer =
-      TextRecognizer(script: TextRecognitionScript.arabic);
 
   Future<File?> pickReceiptImage(ImageSource source) async {
     final XFile? image = await _picker.pickImage(source: source);
@@ -48,37 +47,21 @@ class ReceiptScannerService {
     return File(image.path);
   }
 
-  /// Runs both recognisers and concatenates the results — Latin first,
-  /// then Arabic on a separate line block. This ensures English/Latin
-  /// receipts still work while Arabic receipts are no longer blank.
+  /// Runs the recogniser and returns the extracted text. Arabic keyword
+  /// patterns (`المبلغ` / `الإجمالي`) remain in the parser so that future
+  /// ML Kit versions with Arabic support will work without parser changes.
   Future<String> extractTextFromImage(File image) async {
     final inputImage = InputImage.fromFile(image);
-    final StringBuffer buffer = StringBuffer();
     try {
       final RecognizedText latinText =
           await _latinRecognizer.processImage(inputImage);
-      buffer.writeln(latinText.text);
+      return latinText.text;
     } catch (e, s) {
-      // Latin recognizer is the most reliable — if it fails, surface to
-      // caller rather than silently returning empty Arabic-only output.
-      if (kDebugMode) debugPrint('ReceiptScannerService latin OCR error: $e\n$s');
+      if (kDebugMode) {
+        debugPrint('ReceiptScannerService latin OCR error: $e\n$s');
+      }
       rethrow;
     }
-    try {
-      final RecognizedText arabicText =
-          await _arabicRecognizer.processImage(inputImage);
-      if (arabicText.text.trim().isNotEmpty) {
-        buffer.writeln();
-        buffer.writeln(arabicText.text);
-      }
-    } catch (e, s) {
-      // Arabic recognizer failure is non-fatal — many receipts have no
-      // Arabic script at all.
-      if (kDebugMode) {
-        debugPrint('ReceiptScannerService arabic OCR skipped: $e\n$s');
-      }
-    }
-    return buffer.toString();
   }
 
   /// Parse raw OCR text and extract structured receipt data
@@ -231,6 +214,5 @@ class ReceiptScannerService {
 
   void dispose() {
     _latinRecognizer.close();
-    _arabicRecognizer.close();
   }
 }

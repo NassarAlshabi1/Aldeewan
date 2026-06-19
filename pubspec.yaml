@@ -45,6 +45,7 @@ dependencies:
   encrypt: ^5.0.3
   pdf: ^3.11.1
   printing: ^5.13.4
+  collection: ^1.18.0
 
 dev_dependencies:
   flutter_test:
