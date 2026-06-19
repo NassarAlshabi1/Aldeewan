@@ -41,8 +41,9 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
     if (path == '/home' || path == '/') return 0;
     if (path.startsWith('/ledger')) return 1;
     if (path.startsWith('/cashbook')) return 2;
-    if (path.startsWith('/analytics')) return 3;
-    if (path.startsWith('/settings')) return 4;
+    if (path.startsWith('/inventory')) return 3;
+    if (path.startsWith('/analytics')) return 4;
+    if (path.startsWith('/settings')) return 5;
     return 0;
   }
 

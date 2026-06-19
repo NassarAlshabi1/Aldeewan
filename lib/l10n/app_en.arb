@@ -669,6 +669,20 @@
   "restoreReplaceDesc": "Danger: Deletes all current data.",
   "restoreReplaceWarning": "This will PERMANENTLY DELETE all current data. Are you sure?",
   "invalidPassword": "Invalid Password",
-  "schemaVersionMismatch": "Backup is from a newer version of the app. Please update Aldeewan."
+  "schemaVersionMismatch": "Backup is from a newer version of the app. Please update Aldeewan.",
+  "calendar": "Calendar",
+  "previousMonth": "Previous Month",
+  "nextMonth": "Next Month",
+  "splitBill": "Split Bill",
+  "totalAmount": "Total Amount",
+  "equal": "Equal",
+  "percentage": "Percentage",
+  "exact": "Exact",
+  "participants": "Participants",
+  "share": "Share",
+  "remaining": "Remaining",
+  "fullyAllocated": "Fully Allocated",
+  "splitBillSaved": "Split bill saved successfully",
+  "noTransactions": "No transactions"
 }
 

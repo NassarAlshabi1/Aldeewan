@@ -12,7 +12,8 @@ enum LedgerSortOption {
   amountLow 
 }
 
-/// Provider to manage the current ledger sort option
-final ledgerSortProvider = StateProvider<LedgerSortOption>(
+/// Provider to manage the current ledger sort option.
+/// AutoDispose so the sort resets when the user leaves the ledger screen.
+final ledgerSortProvider = StateProvider.autoDispose<LedgerSortOption>(
   (ref) => LedgerSortOption.dateAddedNew,
 );

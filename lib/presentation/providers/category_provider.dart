@@ -1,45 +1,57 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aldeewan_mobile/data/models/category_model.dart';
-import 'package:aldeewan_mobile/data/models/budget_model.dart';
-import 'package:aldeewan_mobile/presentation/providers/database_provider.dart';
+import 'package:aldeewan_mobile/domain/repositories/inventory_repositories.dart';
+import 'package:aldeewan_mobile/presentation/providers/dependency_injection.dart';
 import 'package:aldeewan_mobile/presentation/models/category.dart';
 import 'package:realm/realm.dart';
 
-final categoryProvider = StateNotifierProvider<CategoryNotifier, List<Category>>((ref) {
-  final realmAsync = ref.watch(realmProvider);
-  return realmAsync.when(
-    data: (realm) => CategoryNotifier(realm),
-    loading: () => CategoryNotifier(null),
-    error: (e, s) => CategoryNotifier(null),
-  );
+/// Typed failure for category deletion.
+class CategoryInUseFailure implements Exception {
+  final String categoryName;
+  const CategoryInUseFailure(this.categoryName);
+  @override
+  String toString() =>
+      'Cannot delete category "$categoryName" because it is used in active budgets.';
+}
+
+final categoryProvider =
+    StateNotifierProvider<CategoryNotifier, List<Category>>((ref) {
+  final repo = ref.watch(categoryRepositoryProvider);
+  final budgetRepo = ref.watch(budgetRepositoryProvider);
+  final notifier = CategoryNotifier(repo, budgetRepo);
+  ref.onDispose(() => notifier.dispose());
+  return notifier;
 });
 
 class CategoryNotifier extends StateNotifier<List<Category>> {
-  final Realm? _realm;
-
-  CategoryNotifier(this._realm) : super([]) {
-    if (_realm != null) {
-      _loadCategories();
-    }
+  CategoryNotifier(this._repo, this._budgetRepo) : super([]) {
+    _init();
   }
 
-  void _loadCategories() {
-    final realm = _realm;
-    if (realm == null) return;
+  final CategoryRepository _repo;
+  final BudgetRepository _budgetRepo;
+  StreamSubscription<List<CategoryModel>>? _subscription;
 
-    final results = realm.all<CategoryModel>();
-    if (results.isEmpty) {
-      _seedDefaults();
-    } else {
-      state = results.map((m) => Category.fromModel(m)).toList();
+  Future<void> _init() async {
+    final existing = await _repo.getCategories();
+    if (existing.isEmpty) {
+      await _seedDefaults();
     }
+    _subscription = _repo.watchCategories().listen((models) {
+      if (!mounted) return;
+      state = models.map((m) => Category.fromModel(m)).toList();
+    });
   }
 
-  void _seedDefaults() {
-    final realm = _realm;
-    if (realm == null) return;
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
+  }
 
+  Future<void> _seedDefaults() async {
     final defaults = [
       _createModel('Housing', 'home', Colors.blue, 'expense'),
       _createModel('Food & Dining', 'utensils', Colors.orange, 'expense'),
@@ -50,14 +62,13 @@ class CategoryNotifier extends StateNotifier<List<Category>> {
       _createModel('Utilities', 'lightbulb', Colors.yellow, 'expense'),
       _createModel('Income', 'wallet', Colors.green, 'income'),
     ];
-    
-    realm.write(() {
-      realm.addAll(defaults);
-    });
-    _loadCategories();
+    for (final model in defaults) {
+      await _repo.upsertCategory(model);
+    }
   }
 
-  CategoryModel _createModel(String name, String icon, Color color, String type) {
+  CategoryModel _createModel(
+      String name, String icon, Color color, String type) {
     return CategoryModel(
       ObjectId(),
       name,
@@ -68,10 +79,8 @@ class CategoryNotifier extends StateNotifier<List<Category>> {
     );
   }
 
-  void addCategory(String name, String iconName, Color color, String type) {
-    final realm = _realm;
-    if (realm == null) return;
-
+  Future<void> addCategory(
+      String name, String iconName, Color color, String type) async {
     final model = CategoryModel(
       ObjectId(),
       name,
@@ -80,29 +89,25 @@ class CategoryNotifier extends StateNotifier<List<Category>> {
       type,
       true,
     );
-    realm.write(() {
-      realm.add(model);
-    });
-    _loadCategories();
+    await _repo.upsertCategory(model);
   }
-  
-  void deleteCategory(String id) {
-     final realm = _realm;
-     if (realm == null) return;
 
-     final objectId = ObjectId.fromHexString(id);
-     final model = realm.find<CategoryModel>(objectId);
-     if (model != null) {
-       // Check for active budgets using this category
-       final activeBudgets = realm.all<BudgetModel>().query('category == \$0', [model.name]);
-       if (activeBudgets.isNotEmpty) {
-         throw Exception('Cannot delete category "${model.name}" because it is used in active budgets.');
-       }
+  Future<void> deleteCategory(String id) async {
+    final objectId = ObjectId.fromHexString(id);
+    final existing = await _repo.getCategories();
+    final model = existing.firstWhere(
+      (c) => c.id == objectId,
+      orElse: () => throw Exception('Category not found'),
+    );
 
-       realm.write(() {
-         realm.delete(model);
-       });
-       _loadCategories();
-     }
+    // Check for active budgets using this category name.
+    final budgets = await _budgetRepo.getBudgets();
+    final activeBudgets =
+        budgets.where((b) => b.category == model.name).toList();
+    if (activeBudgets.isNotEmpty) {
+      throw CategoryInUseFailure(model.name);
+    }
+
+    await _repo.deleteCategory(objectId);
   }
 }

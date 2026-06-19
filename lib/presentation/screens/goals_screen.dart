@@ -361,17 +361,24 @@ class GoalsScreen extends ConsumerWidget {
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
           FilledButton(
-            onPressed: () {
+            onPressed: () async {
               final amount = double.tryParse(amountController.text.replaceAll(',', '')) ?? 0;
               if (amount > 0) {
                 try {
-                  ref.read(budgetProvider.notifier).updateGoal(goal, amount);
+                  await ref.read(budgetProvider.notifier).updateGoal(goal, amount);
+                  if (!context.mounted) return;
                   Navigator.pop(context);
                 } catch (e) {
+                  if (!context.mounted) return;
                   Navigator.pop(context); // Close dialog first
+                  final message = switch (e) {
+                    InsufficientFundsFailure f => f.toString(),
+                    InsufficientSavingsFailure f => f.toString(),
+                    _ => e.toString().replaceAll('Exception: ', ''),
+                  };
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(e.toString().replaceAll('Exception: ', '')),
+                      content: Text(message),
                       backgroundColor: Colors.red,
                     ),
                   );

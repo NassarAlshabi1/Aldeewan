@@ -22,8 +22,10 @@ class _StockMovementModel {
 
   late double quantity;
   double? unitCost;
+  @Indexed()
   String? personId;
   String? transactionId;
+  @Indexed()
   late DateTime date;
   String? note;
   late DateTime createdAt;

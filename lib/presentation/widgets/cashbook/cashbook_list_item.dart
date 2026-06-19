@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:intl/intl.dart';
 import 'package:aldeewan_mobile/domain/entities/transaction.dart';
 import 'package:aldeewan_mobile/config/app_colors.dart';
 import 'package:aldeewan_mobile/l10n/generated/app_localizations.dart';
 import 'package:aldeewan_mobile/presentation/widgets/dual_date_text.dart';
-import 'package:aldeewan_mobile/presentation/screens/transaction_details_screen.dart';
 import 'package:aldeewan_mobile/utils/category_helper.dart';
 
 class CashbookListItem extends StatelessWidget {
@@ -51,12 +51,7 @@ class CashbookListItem extends StatelessWidget {
         child: ListTile(
           contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => TransactionDetailsScreen(transaction: transaction),
-              ),
-            );
+            context.push('/transaction', extra: transaction);
           },
           leading: Container(
             padding: EdgeInsets.all(10.w),

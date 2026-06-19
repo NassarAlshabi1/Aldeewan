@@ -12,6 +12,7 @@ import 'package:aldeewan_mobile/presentation/widgets/empty_state.dart';
 
 import 'package:aldeewan_mobile/presentation/widgets/cashbook/cashbook_list_item.dart';
 import 'package:aldeewan_mobile/presentation/widgets/cash_entry_form.dart';
+import 'package:aldeewan_mobile/utils/transaction_label_mapper.dart';
 import 'package:aldeewan_mobile/l10n/generated/app_localizations.dart';
 import 'package:aldeewan_mobile/presentation/providers/category_provider.dart';
 import 'package:aldeewan_mobile/config/app_colors.dart';
@@ -503,13 +504,15 @@ class _CashbookScreenState extends ConsumerState<CashbookScreen> {  // REMOVED S
         // Find category
         final category = categories.where((c) => c.name == tx.category).firstOrNull;
 
-        return CashbookListItem(
-          transaction: tx,
-          personName: personName,
-          category: category,
-          currency: currency,
-          numberFormat: numberFormat,
-          getTransactionLabel: _getTransactionLabel,
+        return RepaintBoundary(
+          child: CashbookListItem(
+            transaction: tx,
+            personName: personName,
+            category: category,
+            currency: currency,
+            numberFormat: numberFormat,
+            getTransactionLabel: _getTransactionLabel,
+          ),
         );
       },
     );
@@ -544,24 +547,7 @@ class _CashbookScreenState extends ConsumerState<CashbookScreen> {  // REMOVED S
   }
 
   String _getTransactionLabel(TransactionType type, AppLocalizations l10n) {
-    switch (type) {
-      case TransactionType.paymentReceived:
-        return l10n.paymentReceived;
-      case TransactionType.paymentMade:
-        return l10n.paymentMade;
-      case TransactionType.cashSale:
-        return l10n.cashLabel; // نقد - Cash
-      case TransactionType.cashIncome:
-        return l10n.bankLabel; // بنك - Bank
-      case TransactionType.cashExpense:
-        return l10n.expense;
-      case TransactionType.debtGiven:
-        return l10n.debtGiven;
-      case TransactionType.debtTaken:
-        return l10n.debtTaken;
-      default:
-        return l10n.transaction;
-    }
+    return TransactionLabelMapper.getLabel(type, false, l10n);
   }
 
   String _formatDateRange(DateTimeRange? range) {

@@ -20,6 +20,9 @@ import 'package:aldeewan_mobile/presentation/screens/help_center_screen.dart';
 import 'package:aldeewan_mobile/presentation/screens/person_details_screen.dart';
 import 'package:aldeewan_mobile/presentation/screens/inventory_screen.dart';
 import 'package:aldeewan_mobile/presentation/screens/product_details_screen.dart';
+import 'package:aldeewan_mobile/presentation/screens/categories_management_screen.dart';
+import 'package:aldeewan_mobile/presentation/screens/split_bill_screen.dart';
+import 'package:aldeewan_mobile/presentation/screens/calendar_screen.dart';
 import 'package:aldeewan_mobile/presentation/widgets/scaffold_with_nav_bar.dart';
 import 'package:aldeewan_mobile/presentation/widgets/showcase_wrapper.dart';
 import 'package:aldeewan_mobile/domain/entities/transaction.dart';
@@ -50,6 +53,21 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/notifications',
         builder: (context, state) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: '/categories',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const CategoriesManagementScreen(),
+      ),
+      GoRoute(
+        path: '/split-bill',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const SplitBillScreen(),
+      ),
+      GoRoute(
+        path: '/calendar',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const CalendarScreen(),
       ),
       ShellRoute(
         navigatorKey: shellNavigatorKey,

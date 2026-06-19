@@ -177,11 +177,15 @@ final ledgerProvider = StateNotifierProvider<LedgerNotifier, AsyncValue<LedgerSt
   return LedgerNotifier(ref);
 });
 
-/// Search query provider for ledger person filtering
-final ledgerSearchProvider = StateProvider<String>((ref) => '');
+/// Search query provider for ledger person filtering.
+/// AutoDispose so the filter resets when the user leaves the screen.
+final ledgerSearchProvider =
+    StateProvider.autoDispose<String>((ref) => '');
 
 // Filter: 'owes' = only show persons with outstanding balance, 'all' = show all
-final ledgerBalanceFilterProvider = StateProvider<String>((ref) => 'all');
+final ledgerBalanceFilterProvider =
+    StateProvider.autoDispose<String>((ref) => 'all');
 
 /// Toggle to show/hide archived persons
-final showArchivedProvider = StateProvider<bool>((ref) => false);
+final showArchivedProvider =
+    StateProvider.autoDispose<bool>((ref) => false);

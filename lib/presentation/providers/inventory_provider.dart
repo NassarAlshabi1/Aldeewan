@@ -1,11 +1,12 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
-import 'package:aldeewan_mobile/data/datasources/local_database_source.dart';
 import 'package:aldeewan_mobile/data/models/product_model.dart';
 import 'package:aldeewan_mobile/data/models/stock_movement_model.dart';
 import 'package:aldeewan_mobile/domain/entities/product.dart';
+import 'package:aldeewan_mobile/domain/repositories/inventory_repositories.dart';
 import 'package:aldeewan_mobile/presentation/providers/dependency_injection.dart';
 
 /// Read-only view of a product plus its computed quantity on hand.
@@ -47,39 +48,50 @@ class InventoryState {
 }
 
 class InventoryNotifier extends StateNotifier<InventoryState> {
-  InventoryNotifier(this._dataSource) : super(const InventoryState()) {
+  InventoryNotifier(this._repo) : super(const InventoryState()) {
     _subscribe();
   }
 
-  final LocalDatabaseSource _dataSource;
-  Stream<List<ProductModel>>? _productStream;
-  Stream<List<StockMovementModel>>? _movementStream;
+  final InventoryRepository _repo;
+  StreamSubscription<List<ProductModel>>? _productSubscription;
+  StreamSubscription<List<StockMovementModel>>? _movementSubscription;
+  Timer? _recomputeDebounce;
 
   void _subscribe() {
-    _productStream = _dataSource.watchProducts();
-    _movementStream = _dataSource.watchStockMovements();
+    final productStream = _repo.watchProducts();
+    final movementStream = _repo.watchStockMovements();
 
-    _productStream!.listen(
-      (_) => _recompute(),
+    _productSubscription = productStream.listen(
+      (_) => _scheduleRecompute(),
       onError: (e, s) {
-        debugPrint('❌ InventoryNotifier product stream error: $e');
+        if (kDebugMode) {
+          debugPrint('❌ InventoryNotifier product stream error: $e');
+        }
         state = state.copyWith(isLoading: false, error: e.toString());
       },
     );
 
-    _movementStream!.listen(
-      (_) => _recompute(),
+    _movementSubscription = movementStream.listen(
+      (_) => _scheduleRecompute(),
       onError: (e, s) {
-        debugPrint('❌ InventoryNotifier movement stream error: $e');
+        if (kDebugMode) {
+          debugPrint('❌ InventoryNotifier movement stream error: $e');
+        }
         state = state.copyWith(isLoading: false, error: e.toString());
       },
     );
+  }
+
+  /// Debounce rapid re-computes (e.g. bulk stock-take writes).
+  void _scheduleRecompute() {
+    _recomputeDebounce?.cancel();
+    _recomputeDebounce = Timer(const Duration(milliseconds: 100), _recompute);
   }
 
   Future<void> _recompute() async {
     try {
-      final products = await _dataSource.getProducts();
-      final movements = await _dataSource.getStockMovements();
+      final products = await _repo.getProducts();
+      final movements = await _repo.getStockMovements();
 
       // Pre-aggregate quantity on hand per product (single pass).
       final Map<String, double> qtyByProduct = {};
@@ -112,42 +124,43 @@ class InventoryNotifier extends StateNotifier<InventoryState> {
 
   Future<void> addProduct(Product product) async {
     final model = productModelFromEntity(product);
-    await _dataSource.putProduct(model);
+    await _repo.upsertProduct(model);
   }
 
   Future<void> updateProduct(Product product) async {
     final updated = product.copyWith(updatedAt: DateTime.now());
-    await _dataSource.putProduct(productModelFromEntity(updated));
+    await _repo.upsertProduct(productModelFromEntity(updated));
   }
 
   Future<void> archiveProduct(String productId) async {
-    await _dataSource.archiveProduct(productId);
+    await _repo.archiveProduct(productId);
   }
 
   Future<void> deleteProduct(String productId) async {
-    await _dataSource.deleteProduct(productId);
+    await _repo.deleteProduct(productId);
   }
 
   Future<void> addStockMovement(StockMovement movement) async {
-    await _dataSource.putStockMovement(stockMovementModelFromEntity(movement));
+    await _repo.upsertStockMovement(stockMovementModelFromEntity(movement));
   }
 
   Future<void> deleteStockMovement(String movementId) async {
-    await _dataSource.deleteStockMovement(movementId);
+    await _repo.deleteStockMovement(movementId);
   }
 
   @override
   void dispose() {
-    _productStream = null;
-    _movementStream = null;
+    _recomputeDebounce?.cancel();
+    _productSubscription?.cancel();
+    _movementSubscription?.cancel();
     super.dispose();
   }
 }
 
 final inventoryProvider =
     StateNotifierProvider<InventoryNotifier, InventoryState>((ref) {
-  final dataSource = ref.watch(localDatabaseSourceProvider);
-  return InventoryNotifier(dataSource);
+  final repo = ref.watch(inventoryRepositoryProvider);
+  return InventoryNotifier(repo);
 });
 
 // ============================================================

@@ -9,6 +9,9 @@ class MockBankProvider implements BankProviderInterface {
   String get providerId => 'MOCK_BANK';
 
   @override
+  String get displayName => 'Mock Bank (Demo)';
+
+  @override
   Future<bool> authenticate(String username, String password) async {
     // Simulate network delay
     await Future.delayed(const Duration(seconds: 2));

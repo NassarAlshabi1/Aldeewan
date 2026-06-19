@@ -13,6 +13,7 @@ import 'package:aldeewan_mobile/data/models/category_model.dart';
 import 'package:aldeewan_mobile/data/models/notification_item_model.dart';
 import 'package:aldeewan_mobile/data/models/product_model.dart';
 import 'package:aldeewan_mobile/data/models/stock_movement_model.dart';
+import 'package:aldeewan_mobile/data/models/recurring_transaction_model.dart';
 import 'package:aldeewan_mobile/domain/entities/product.dart';
 
 class LocalDatabaseSource {
@@ -37,33 +38,60 @@ class LocalDatabaseSource {
         NotificationItemModel.schema,
         ProductModel.schema,
         StockMovementModel.schema,
+        RecurringTransactionModel.schema,
       ],
       encryptionKey: key,
-      schemaVersion: 7, // Incremented for Product + StockMovement + currencyCode fields
+      schemaVersion: 9, // v9: Added RecurringTransactionModel for the new recurring-transactions feature.
       migrationCallback: (migration, oldSchemaVersion) {
-        const targetVersion = 7;
-        debugPrint('🔄 Realm migration: v$oldSchemaVersion -> v$targetVersion');
+        const targetVersion = 9;
+        if (kDebugMode) {
+          debugPrint('🔄 Realm migration: v$oldSchemaVersion -> v$targetVersion');
+        }
 
         if (oldSchemaVersion < 2) {
-          debugPrint('  📦 Migrating v1 -> v2');
+          if (kDebugMode) debugPrint('  📦 Migrating v1 -> v2');
         }
         if (oldSchemaVersion < 3) {
-          debugPrint('  📦 Migrating v2 -> v3: Added budgets and goals');
+          if (kDebugMode) debugPrint('  📦 Migrating v2 -> v3: Added budgets and goals');
         }
         if (oldSchemaVersion < 4) {
-          debugPrint('  📦 Migrating v3 -> v4: Added goalId to transactions');
+          if (kDebugMode) debugPrint('  📦 Migrating v3 -> v4: Added goalId to transactions');
         }
         if (oldSchemaVersion < 5) {
-          debugPrint('  📦 Migrating v4 -> v5: Added isArchived to Person');
+          if (kDebugMode) debugPrint('  📦 Migrating v4 -> v5: Added isArchived to Person');
         }
         if (oldSchemaVersion < 6) {
-          debugPrint('  📦 Migrating v5 -> v6: Added isOpeningBalance to Transaction');
+          if (kDebugMode) debugPrint('  📦 Migrating v5 -> v6: Added isOpeningBalance to Transaction');
         }
         if (oldSchemaVersion < 7) {
-          debugPrint('  📦 Migrating v6 -> v7: Added currencyCode to Person & Transaction, Product & StockMovement collections');
+          if (kDebugMode) debugPrint('  📦 Migrating v6 -> v7: Added currencyCode to Person & Transaction, Product & StockMovement collections');
+        }
+        if (oldSchemaVersion < 8) {
+          if (kDebugMode) {
+            debugPrint('  📦 Migrating v7 -> v8: Backfill currencyCode on legacy transactions from their person');
+          }
+          // Backfill missing currencyCode on transactions using their person's
+          // currencyCode (if any). This fixes the v7 migration gap where the
+          // column was added but never populated for pre-existing rows.
+          final persons = migration.oldRealm.all<PersonModel>();
+          final personCurrency = <String, String?>{};
+          for (final p in persons) {
+            personCurrency[p.id] = p.currencyCode;
+          }
+          final txns = migration.newRealm.all<TransactionModel>();
+          for (final t in txns) {
+            if (t.currencyCode == null && t.personId != null) {
+              t.currencyCode = personCurrency[t.personId];
+            }
+          }
+        }
+        if (oldSchemaVersion < 9) {
+          if (kDebugMode) {
+            debugPrint('  📦 Migrating v8 -> v9: Added RecurringTransactionModel (new collection, no data migration)');
+          }
         }
 
-        debugPrint('✅ Migration completed successfully');
+        if (kDebugMode) debugPrint('✅ Migration completed successfully');
       },
     );
 
@@ -233,6 +261,8 @@ class LocalDatabaseSource {
           realm.deleteAll<FinancialAccountModel>();
           realm.deleteAll<BudgetModel>();
           realm.deleteAll<SavingsGoalModel>();
+          realm.deleteAll<CategoryModel>();
+          realm.deleteAll<NotificationItemModel>();
           realm.deleteAll<ProductModel>();
           realm.deleteAll<StockMovementModel>();
       });

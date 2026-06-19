@@ -1,93 +1,69 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:realm/realm.dart' hide Uuid;
 import 'package:uuid/uuid.dart';
 import 'package:aldeewan_mobile/data/models/notification_item_model.dart';
-import 'package:aldeewan_mobile/presentation/providers/database_provider.dart';
+import 'package:aldeewan_mobile/domain/repositories/inventory_repositories.dart';
+import 'package:aldeewan_mobile/presentation/providers/dependency_injection.dart';
 
-class NotificationHistoryNotifier extends StateNotifier<List<NotificationItemModel>> {
-  final Realm? _realm;
-
-  NotificationHistoryNotifier(this._realm) : super([]) {
-    _loadNotifications();
+class NotificationHistoryNotifier
+    extends StateNotifier<List<NotificationItemModel>> {
+  NotificationHistoryNotifier(this._repo) : super([]) {
+    _init();
   }
 
-  void _loadNotifications() {
-    if (_realm == null) return;
-    final notifications = _realm.all<NotificationItemModel>().toList();
-    // Sort by date descending
-    notifications.sort((a, b) => b.date.compareTo(a.date));
-    state = notifications;
+  final NotificationRepository _repo;
+  StreamSubscription<List<NotificationItemModel>>? _subscription;
+
+  Future<void> _init() async {
+    final initial = await _repo.getNotifications();
+    if (!mounted) return;
+    state = initial;
+    _subscription = _repo.watchNotifications().listen((notifications) {
+      if (!mounted) return;
+      final sorted = List<NotificationItemModel>.from(notifications)
+        ..sort((a, b) => b.date.compareTo(a.date));
+      state = sorted;
+    });
   }
 
-  void addNotification({
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
+  }
+
+  Future<void> addNotification({
     required String title,
     required String body,
     String type = 'info',
-  }) {
-    if (_realm == null) return;
-    
+  }) async {
     final notification = NotificationItemModel(
       const Uuid().v4(),
       title,
       body,
       DateTime.now(),
-      false, // isRead
+      false,
       type,
     );
-
-    _realm.write(() {
-      _realm.add(notification);
-    });
-    _loadNotifications();
+    await _repo.addNotification(notification);
   }
 
-  void markAsRead(String id) {
-    if (_realm == null) return;
-    final notification = _realm.find<NotificationItemModel>(id);
-    if (notification != null) {
-      _realm.write(() {
-        notification.isRead = true;
-      });
-      _loadNotifications();
-    }
+  Future<void> markAsRead(String id) async {
+    await _repo.markAsRead(id);
   }
 
-  void markAllAsRead() {
-    if (_realm == null) return;
-    final unread = _realm.all<NotificationItemModel>().query('isRead == false');
-    _realm.write(() {
-      for (final n in unread) {
-        n.isRead = true;
-      }
-    });
-    _loadNotifications();
+  Future<void> markAllAsRead() async {
+    await _repo.markAllAsRead();
   }
 
-  void deleteNotification(String id) {
-    if (_realm == null) return;
-    final notification = _realm.find<NotificationItemModel>(id);
-    if (notification != null) {
-      _realm.write(() {
-        _realm.delete(notification);
-      });
-      _loadNotifications();
-    }
-  }
-
-  void clearAll() {
-    if (_realm == null) return;
-    _realm.write(() {
-      _realm.deleteAll<NotificationItemModel>();
-    });
-    _loadNotifications();
+  Future<void> deleteNotification(String id) async {
+    await _repo.deleteNotification(id);
   }
 }
 
-final notificationHistoryProvider = StateNotifierProvider<NotificationHistoryNotifier, List<NotificationItemModel>>((ref) {
-  final realmAsync = ref.watch(realmProvider);
-  return realmAsync.when(
-    data: (realm) => NotificationHistoryNotifier(realm),
-    loading: () => NotificationHistoryNotifier(null),
-    error: (e, s) => NotificationHistoryNotifier(null),
-  );
+final notificationHistoryProvider = StateNotifierProvider<
+    NotificationHistoryNotifier, List<NotificationItemModel>>((ref) {
+  final repo = ref.watch(notificationRepositoryProvider);
+  return NotificationHistoryNotifier(repo);
 });

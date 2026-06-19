@@ -560,6 +560,20 @@
   "restoreReplaceDesc": "خطر: سيتم حذف جميع البيانات الحالية.",
   "restoreReplaceWarning": "سيتم حذف جميع البيانات الحالية نهائياً. هل أنت متأكد؟",
   "invalidPassword": "كلمة المرور غير صحيحة",
-  "schemaVersionMismatch": "النسخة الاحتياطية من إصدار أحدث للتطبيق. يرجى تحديث الديوان."
+  "schemaVersionMismatch": "النسخة الاحتياطية من إصدار أحدث للتطبيق. يرجى تحديث الديوان.",
+  "calendar": "التقويم",
+  "previousMonth": "الشهر السابق",
+  "nextMonth": "الشهر التالي",
+  "splitBill": "تقسيم الفاتورة",
+  "totalAmount": "المبلغ الإجمالي",
+  "equal": "تساوي",
+  "percentage": "نسبة مئوية",
+  "exact": "مبلغ محدد",
+  "participants": "المشاركون",
+  "share": "الحصة",
+  "remaining": "المتبقي",
+  "fullyAllocated": "تم توزيع الكل",
+  "splitBillSaved": "تم حفظ تقسيم الفاتورة بنجاح",
+  "noTransactions": "لا توجد معاملات"
 }
 

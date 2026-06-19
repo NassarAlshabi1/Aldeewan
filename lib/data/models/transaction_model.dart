@@ -14,6 +14,7 @@ class _TransactionModel {
   String? personId;
 
   late double amount;
+  @Indexed()
   late DateTime date;
   String? category;
   String? note;

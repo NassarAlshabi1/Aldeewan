@@ -11,54 +11,34 @@ class ShowcaseKeys {
   static final GlobalKey quickActions = GlobalKey();
   static final GlobalKey budgetCard = GlobalKey();
   static final GlobalKey goalsCard = GlobalKey();
-  
-  // Ledger Screen (Steps 5-6)
+
+  // Ledger Screen (Step 5)
   static final GlobalKey ledgerList = GlobalKey();
-  static final GlobalKey ledgerFab = GlobalKey();
-  
-  // Cashbook Screen (Steps 7-9)
+
+  // Cashbook Screen (Steps 6-7)
   static final GlobalKey cashbookFilter = GlobalKey();
   static final GlobalKey searchBar = GlobalKey();
-  static final GlobalKey transactionList = GlobalKey();
-  
-  // Analytics Screen (Step 10)
-  static final GlobalKey analyticsTab = GlobalKey();
-  
-  // Settings Screen (Steps 11-12)
+
+  // Settings Screen (Steps 8-9)
   static final GlobalKey backupTile = GlobalKey();
   static final GlobalKey helpButton = GlobalKey();
 
   /// Keys for Home Screen tour (4 steps)
   static List<GlobalKey> get homeKeys => [
-    dashboardCards,
-    quickActions,
-    budgetCard,
-    goalsCard,
-  ];
-  
-  /// Keys for Ledger Screen tour (1 step - only person list has ShowcaseTarget)
-  static List<GlobalKey> get ledgerKeys => [
-    ledgerList,
-    // NOTE: ledgerFab removed - no widget is wrapped with this key
-  ];
-  
-  /// Keys for Cashbook Screen tour (2 steps - filter and search only)
-  static List<GlobalKey> get cashbookKeys => [
-    cashbookFilter,
-    searchBar,
-    // NOTE: transactionList removed - no widget is wrapped with this key
-  ];
-  
-  /// Keys for Analytics Screen tour (1 step)
-  static List<GlobalKey> get analyticsKeys => [
-    analyticsTab,
-  ];
-  
-  /// Keys for Settings Screen tour (2 steps - backup and help)
-  static List<GlobalKey> get settingsKeys => [
-    backupTile,
-    helpButton,
-  ];
+        dashboardCards,
+        quickActions,
+        budgetCard,
+        goalsCard,
+      ];
+
+  /// Keys for Ledger Screen tour (1 step).
+  static List<GlobalKey> get ledgerKeys => [ledgerList];
+
+  /// Keys for Cashbook Screen tour (2 steps — filter & search).
+  static List<GlobalKey> get cashbookKeys => [cashbookFilter, searchBar];
+
+  /// Keys for Settings Screen tour (2 steps — backup & help).
+  static List<GlobalKey> get settingsKeys => [backupTile, helpButton];
 }
 
 /// Wrapper widget to provide Showcase context to the app

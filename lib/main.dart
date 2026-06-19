@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +10,7 @@ import 'package:aldeewan_mobile/presentation/providers/theme_provider.dart';
 import 'package:aldeewan_mobile/presentation/providers/onboarding_provider.dart';
 import 'package:aldeewan_mobile/presentation/providers/locale_provider.dart';
 import 'package:aldeewan_mobile/presentation/providers/security_provider.dart';
+import 'package:aldeewan_mobile/presentation/providers/dependency_injection.dart';
 import 'package:aldeewan_mobile/config/router.dart';
 
 import 'package:aldeewan_mobile/l10n/generated/app_localizations.dart';
@@ -17,6 +21,8 @@ import 'package:aldeewan_mobile/utils/notification_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:aldeewan_mobile/presentation/providers/notification_history_provider.dart';
 import 'package:aldeewan_mobile/data/services/stock_alert_service.dart';
+import 'package:aldeewan_mobile/data/services/recurring_transaction_service.dart';
+import 'package:aldeewan_mobile/data/services/smart_alert_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -47,6 +53,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   late bool _isLocked;
   final _authService = AuthService();
   VoidCallback? _stockAlertCancel;
+  Timer? _recurringTick;
 
   @override
   void initState() {
@@ -64,10 +71,33 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _stockAlertCancel = ref.read(stockAlertServiceProvider).start();
     });
+    // Materialise any due recurring transactions on app start, then every 5 min.
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _runRecurringAndSmartAlerts();
+      _recurringTick = Timer.periodic(const Duration(minutes: 5), (_) {
+        _runRecurringAndSmartAlerts();
+      });
+    });
+  }
+
+  Future<void> _runRecurringAndSmartAlerts() async {
+    try {
+      final recurringService = ref.read(recurringTransactionServiceProvider);
+      final generated = await recurringService.runDue();
+      if (generated > 0 && kDebugMode) {
+        debugPrint('Recurring: generated $generated transactions');
+      }
+      // Smart alerts run after recurring so budget-overrun alerts reflect
+      // any transactions just materialised.
+      await ref.read(smartAlertServiceProvider).runAll();
+    } catch (e, s) {
+      if (kDebugMode) debugPrint('Recurring/SmartAlerts error: $e\n$s');
+    }
   }
 
   @override
   void dispose() {
+    _recurringTick?.cancel();
     _stockAlertCancel?.call();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();

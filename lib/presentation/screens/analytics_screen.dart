@@ -28,9 +28,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> with SingleTi
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _tabController.addListener(() {
-      if (mounted) setState(() {});
-    });
+    // No listener needed — we rebuild via AnimatedBuilder in the AppBar actions.
   }
 
   @override
@@ -61,23 +59,31 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> with SingleTi
       appBar: AppBar(
         title: Text(l10n.analytics),
         actions: [
-          if (_tabController.index == 0)
-            PopupMenuButton<String>(
-              tooltip: l10n.exportCsv,
-              onSelected: (value) {
-                if (value == 'export_persons') {
-                  _exportPersonsCsv(context, ref);
-                }
-              },
-              itemBuilder: (BuildContext context) {
-                return [
-                  PopupMenuItem<String>(
-                    value: 'export_persons',
-                    child: Text(l10n.exportPersons),
-                  ),
-                ];
-              },
-            ),
+          // AnimatedBuilder rebuilds only the actions area on tab change,
+          // not the whole widget tree.
+          AnimatedBuilder(
+            animation: _tabController,
+            builder: (context, _) {
+              return _tabController.index == 0
+                  ? PopupMenuButton<String>(
+                      tooltip: l10n.exportCsv,
+                      onSelected: (value) {
+                        if (value == 'export_persons') {
+                          _exportPersonsCsv(context, ref);
+                        }
+                      },
+                      itemBuilder: (BuildContext context) {
+                        return [
+                          PopupMenuItem<String>(
+                            value: 'export_persons',
+                            child: Text(l10n.exportPersons),
+                          ),
+                        ];
+                      },
+                    )
+                  : const SizedBox.shrink();
+            },
+          ),
         ],
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(60.h),

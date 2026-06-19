@@ -8,6 +8,7 @@ class _FinancialAccountModel {
   late int id;
 
   late String name; // e.g., "Mbok Account"
+  @Indexed()
   late String providerId; // e.g., "MBOK", "SYBER", "CASH"
   late String accountType; // "BANK", "WALLET", "CASH"
   late double balance;

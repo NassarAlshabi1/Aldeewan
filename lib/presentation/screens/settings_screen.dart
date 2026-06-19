@@ -27,7 +27,6 @@ import 'package:aldeewan_mobile/utils/date_formatter_service.dart';
 
 import 'package:showcaseview/showcaseview.dart';
 
-import 'package:aldeewan_mobile/presentation/screens/categories_management_screen.dart';
 import 'package:aldeewan_mobile/presentation/widgets/settings/settings_section.dart';
 import 'package:aldeewan_mobile/presentation/widgets/settings/settings_tile.dart';
 import 'package:aldeewan_mobile/presentation/widgets/settings/theme_selector.dart';
@@ -319,10 +318,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   iconColor: Colors.indigo,
                   title: l10n.manageCategories,
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const CategoriesManagementScreen()),
-                    );
+                    context.push('/categories');
                   },
                 ),
               ],

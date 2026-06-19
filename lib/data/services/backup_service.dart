@@ -6,15 +6,40 @@ import 'package:aldeewan_mobile/data/models/category_model.dart';
 import 'package:aldeewan_mobile/data/models/financial_account_model.dart';
 import 'package:aldeewan_mobile/data/models/notification_item_model.dart';
 import 'package:aldeewan_mobile/data/models/person_model.dart';
+import 'package:aldeewan_mobile/data/models/product_model.dart';
+import 'package:aldeewan_mobile/data/models/recurring_transaction_model.dart';
 import 'package:aldeewan_mobile/data/models/savings_goal_model.dart';
+import 'package:aldeewan_mobile/data/models/stock_movement_model.dart';
 import 'package:aldeewan_mobile/data/models/transaction_model.dart';
 import 'package:encrypt/encrypt.dart' as enc;
 import 'package:flutter/foundation.dart';
 import 'package:realm/realm.dart';
+import 'package:uuid/uuid.dart';
 
 enum RestoreStrategy {
+  /// Wipe all local data and replace with the backup contents.
   replace,
+
+  /// Safe-merge: insert only entities whose primary key does not already exist
+  /// locally. Conflicting IDs are remapped to fresh UUIDs and all referencing
+  /// rows (transactions, stock movements, etc.) are rewritten to follow.
   merge,
+}
+
+/// Thrown when a backup file cannot be parsed or decrypted.
+class BackupFormatException implements Exception {
+  final String message;
+  const BackupFormatException(this.message);
+  @override
+  String toString() => message;
+}
+
+/// Thrown when a password is missing or wrong during restore.
+class BackupPasswordException implements Exception {
+  final String message;
+  const BackupPasswordException(this.message);
+  @override
+  String toString() => message;
 }
 
 class BackupService {
@@ -26,15 +51,24 @@ class BackupService {
   static const int _keyLength = 32;
   static const int _iterationCount = 1000;
 
+  /// Current schema version this code knows how to read & write.
+  /// Mirrors [LocalDatabaseSource.schemaVersion] (kept in sync manually).
+  static const int currentSchemaVersion = 9;
+
+  /// Current app version, stamped on every backup.
+  /// Mirrors pubspec.yaml `version:` (kept in sync manually).
+  static const String currentAppVersion = '2.2.0+5';
+
   BackupService(this._dataSource);
 
-  /// Creates a full backup of the database.
+  /// Creates a full backup of the database, including inventory.
   /// If [password] is provided, the backup will be encrypted.
   /// Returns the JSON string (potentially encrypted).
   Future<String> createBackup({String? password}) async {
     final realm = await _dataSource.db;
 
-    // 1. Gather all data
+    // 1. Gather all data — INCLUDING inventory (Product + StockMovement)
+    // and recurring-transaction rules.
     final persons = realm.all<PersonModel>().toList();
     final transactions = realm.all<TransactionModel>().toList();
     final accounts = realm.all<FinancialAccountModel>().toList();
@@ -42,20 +76,26 @@ class BackupService {
     final goals = realm.all<SavingsGoalModel>().toList();
     final categories = realm.all<CategoryModel>().toList();
     final notifications = realm.all<NotificationItemModel>().toList();
+    final products = realm.all<ProductModel>().toList();
+    final stockMovements = realm.all<StockMovementModel>().toList();
+    final recurring = realm.all<RecurringTransactionModel>().toList();
 
     // 2. Serialize to Map
     final data = {
-      'schemaVersion': 6, // Match LocalDatabaseSource schema version
+      'schemaVersion': currentSchemaVersion,
       'exportedAt': DateTime.now().toIso8601String(),
-      'appVersion': '2.3.0', // Should be dynamic, but for now hardcoded or passed in
+      'appVersion': currentAppVersion,
       'data': {
-        'persons': persons.map((e) => _serializePerson(e)).toList(),
-        'transactions': transactions.map((e) => _serializeTransaction(e)).toList(),
-        'accounts': accounts.map((e) => _serializeAccount(e)).toList(),
-        'budgets': budgets.map((e) => _serializeBudget(e)).toList(),
-        'goals': goals.map((e) => _serializeGoal(e)).toList(),
-        'categories': categories.map((e) => _serializeCategory(e)).toList(),
-        'notifications': notifications.map((e) => _serializeNotification(e)).toList(),
+        'persons': persons.map(_serializePerson).toList(),
+        'transactions': transactions.map(_serializeTransaction).toList(),
+        'accounts': accounts.map(_serializeAccount).toList(),
+        'budgets': budgets.map(_serializeBudget).toList(),
+        'goals': goals.map(_serializeGoal).toList(),
+        'categories': categories.map(_serializeCategory).toList(),
+        'notifications': notifications.map(_serializeNotification).toList(),
+        'products': products.map(_serializeProduct).toList(),
+        'stockMovements': stockMovements.map(_serializeStockMovement).toList(),
+        'recurringTransactions': recurring.map(_serializeRecurring).toList(),
       }
     };
 
@@ -71,7 +111,8 @@ class BackupService {
 
   /// Restores data from a backup string.
   /// [password] is required if the backup is encrypted.
-  Future<void> restoreBackup(String fileContent, {
+  Future<void> restoreBackup(
+    String fileContent, {
     required RestoreStrategy strategy,
     String? password,
   }) async {
@@ -80,60 +121,63 @@ class BackupService {
     // 1. Check if encrypted and decrypt
     try {
       final decodedState = jsonDecode(fileContent);
-      if (decodedState is Map<String, dynamic> && decodedState['isEncrypted'] == true) {
+      if (decodedState is Map<String, dynamic> &&
+          decodedState['isEncrypted'] == true) {
         if (password == null || password.isEmpty) {
-          throw Exception('Password required for encrypted backup');
+          throw const BackupPasswordException(
+              'Password required for encrypted backup');
         }
-        final decryptedJson = await compute(_decryptData, _DecryptionParams(decodedState, password));
-        data = jsonDecode(decryptedJson);
+        String decryptedJson;
+        try {
+          decryptedJson = await compute(
+              _decryptData, _DecryptionParams(decodedState, password));
+        } catch (_) {
+          throw const BackupPasswordException(
+              'Wrong password or corrupted backup');
+        }
+        data = jsonDecode(decryptedJson) as Map<String, dynamic>;
       } else {
-        data = decodedState;
+        data = decodedState as Map<String, dynamic>;
       }
+    } on BackupPasswordException {
+      rethrow;
+    } on BackupFormatException {
+      rethrow;
     } catch (e) {
-      // If primitive JSON decode fails or logic error, might be plain text or corrupt
-      if (e.toString().contains('Password')) rethrow;
-      // Try treating as plain text if structure wasn't checked yet
+      // Plain text or legacy unstructured input.
       if (fileContent.trim().startsWith('{')) {
-         data = jsonDecode(fileContent);
+        try {
+          data = jsonDecode(fileContent) as Map<String, dynamic>;
+        } catch (_) {
+          throw const BackupFormatException('Invalid backup format');
+        }
       } else {
-         throw Exception('Invalid backup format');
+        throw const BackupFormatException('Invalid backup format');
       }
     }
 
-    // 2. Validate Schema & Migrations (Backward Compatibility)
-     // final version = data['schemaVersion'] as int? ?? 1; // Unused for now
-    // Note: Legacy backups from previous version didn't have 'schemaVersion' in root,
-    // they had 'version': 1. Check for that.
-    
-    // Legacy support check
+    // 2. Resolve payload (supports legacy v1 layout without 'data' wrapper).
     Map<String, dynamic> payload = {};
-    if (data.containsKey('data')) {
-       payload = data['data'];
+    if (data.containsKey('data') && data['data'] is Map) {
+      payload = data['data'] as Map<String, dynamic>;
     } else if (data.containsKey('persons') && data.containsKey('transactions')) {
-       // Legacy v1 format directly in root
-       payload = {
-         'persons': data['persons'],
-         'transactions': data['transactions'],
-         // Legacy didn't have others
-       };
+      // Legacy v1 format directly in root.
+      payload = {
+        'persons': data['persons'],
+        'transactions': data['transactions'],
+      };
     } else {
-       // Assuming it matches the new structure even if version absent?
-       // Safe fallback
-       payload = data['data'] ?? {};
+      payload = (data['data'] as Map?)?.cast<String, dynamic>() ?? {};
     }
 
-    // TODO: Implement complex schema migrations if version < 6.
-    // For now, our serializers act as loose parsers, handling missing fields gracefully (helper methods).
+    // 3. Schema migration — backfill missing fields on legacy backups.
+    payload = _migratePayload(payload,
+        fromVersion: (data['schemaVersion'] as num?)?.toInt() ?? 1);
 
     final realm = await _dataSource.db;
 
     if (strategy == RestoreStrategy.replace) {
       realm.write(() {
-        // _dataSource.clearAllSync(realm); // clearAllSync not exposed
-        // Actually LocalDatabaseSource has async generic clear, but we are inside write transaction.
-        // We can't await inside write.
-        // So we must manually fetch and delete or add `deleteAllSync` to source.
-        // OR: use realm.deleteAll<T>() here directly since we have the instance.
         realm.deleteAll<PersonModel>();
         realm.deleteAll<TransactionModel>();
         realm.deleteAll<FinancialAccountModel>();
@@ -141,23 +185,55 @@ class BackupService {
         realm.deleteAll<SavingsGoalModel>();
         realm.deleteAll<CategoryModel>();
         realm.deleteAll<NotificationItemModel>();
-        
-        _insertData(realm, payload);
+        realm.deleteAll<ProductModel>();
+        realm.deleteAll<StockMovementModel>();
+        realm.deleteAll<RecurringTransactionModel>();
+        _insertData(realm, payload, merge: false);
       });
     } else {
-      // Merge Strategy
+      // Merge Strategy — true Safe-Add with ID remapping.
       realm.write(() {
         _insertData(realm, payload, merge: true);
       });
     }
   }
 
-  void _insertData(Realm realm, Map<String, dynamic> data, {bool merge = false}) {
-    // Helper to safely parse list
+  /// Apply field-level migrations so older backups load cleanly on the
+  /// current schema. Currently handles v1..v6 → v7 (adds currencyCode,
+  /// ensures inventory collections exist).
+  Map<String, dynamic> _migratePayload(
+    Map<String, dynamic> payload, {
+    required int fromVersion,
+  }) {
+    final migrated = Map<String, dynamic>.from(payload);
+
+    // v7 added products + stockMovements collections — older backups
+    // simply don't have them, so default to empty lists.
+    migrated.putIfAbsent('products', () => <Map<String, dynamic>>[]);
+    migrated.putIfAbsent('stockMovements', () => <Map<String, dynamic>>[]);
+    // v9 added recurringTransactions collection.
+    migrated.putIfAbsent(
+        'recurringTransactions', () => <Map<String, dynamic>>[]);
+
+    // v7 added currencyCode to Person & Transaction — leave null if absent,
+    // the deserialisers already tolerate null currencyCode.
+    if (fromVersion < 7) {
+      if (kDebugMode) {
+        debugPrint(
+            'BackupService: migrating backup from v$fromVersion to v$currentSchemaVersion');
+      }
+    }
+    return migrated;
+  }
+
+  void _insertData(Realm realm, Map<String, dynamic> data,
+      {required bool merge}) {
     List<T> parseList<T>(String key, T Function(Map<String, dynamic>) mapper) {
       final list = data[key];
       if (list is List) {
-        return list.map((e) => mapper(e as Map<String, dynamic>)).toList();
+        return list
+            .map((e) => mapper(e as Map<String, dynamic>))
+            .toList();
       }
       return [];
     }
@@ -169,206 +245,364 @@ class BackupService {
     final goals = parseList('goals', _deserializeGoal);
     final categories = parseList('categories', _deserializeCategory);
     final notifications = parseList('notifications', _deserializeNotification);
+    final products = parseList('products', _deserializeProduct);
+    final stockMovements = parseList('stockMovements', _deserializeStockMovement);
+    final recurring = parseList('recurringTransactions', _deserializeRecurring);
 
     if (merge) {
-       // Smart Merge: use update=true (default in Realm.add) but be careful with IDs.
-       // Realm.add(..., update: true) overwrites if ID exists.
-       // User asked ("Never lose data").
-       // If ID conflict:
-       // Option A: Overwrite (Standard Restore)
-       // Option B: Skip (Keep existing)
-       // Option C: Generate new ID (Safe Add)
-       
-       // For "Merge", "Safe Add" is best to prevent data loss.
-       // But relationships (Transaction -> Person) rely on IDs.
-       // If we change Person ID, we must update Transaction PersonID.
-       // This gets complex.
-       // Practical compromise: "Update: true" means "Merge changes". 
-       // If local modified, backup overwrite it.
-       // If we want "Add Only", we'd check existence.
+      // True Safe-Add: for every entity whose PK already exists locally,
+      // allocate a fresh UUID and rewrite any referencing rows to follow.
+      final personIdMap = <String, String>{};
+      final productIdMap = <String, String>{};
 
-       // "Merge" usually means "Add missing + Update existing".
-       // Let's stick to update: true which is standard for restore.
-       // If user wanted "Keep my changes", they shouldn't merge an old backup.
+      for (final p in persons) {
+        if (realm.find<PersonModel>(p.id) != null) {
+          final newId = const Uuid().v4();
+          personIdMap[p.id] = newId;
+          p.id = newId;
+        }
+      }
+      for (final p in products) {
+        if (realm.find<ProductModel>(p.id) != null) {
+          final newId = const Uuid().v4();
+          productIdMap[p.id] = newId;
+          p.id = newId;
+        }
+      }
+      // Rewrite transactions referencing remapped person IDs.
+      for (final t in transactions) {
+        final remapped = personIdMap[t.personId];
+        if (remapped != null) {
+          t.personId = remapped;
+        }
+      }
+      // Rewrite stock movements referencing remapped products & persons.
+      for (final m in stockMovements) {
+        final remappedProduct = productIdMap[m.productId];
+        if (remappedProduct != null) m.productId = remappedProduct;
+        final remappedPerson = personIdMap[m.personId];
+        if (remappedPerson != null) m.personId = remappedPerson;
+      }
+      // Goals & budgets reference transactions via goalId/category — those
+      // are not PKs, so no remap needed.
     }
-    
-    // Insert/Update order matters for constraints? Realm is loose.
-    for (var i in persons) { realm.add(i, update: true); }
-    for (var i in accounts) { realm.add(i, update: true); }
-    for (var i in categories) { realm.add(i, update: true); } // Categories often static 
-    for (var i in budgets) { realm.add(i, update: true); }
-    for (var i in goals) { realm.add(i, update: true); }
-    // Transactions last (refer to persons)
-    for (var i in transactions) {
-       // Check if person exists? Realm doesn't enforce FK strictly if not linked object.
-       // Models use personId string.
-       realm.add(i, update: true);
+
+    // Insert/update order respects referential dependencies.
+    for (final i in persons) {
+      realm.add(i, update: true);
     }
-    for (var i in notifications) { realm.add(i, update: true); }
+    for (final i in accounts) {
+      realm.add(i, update: true);
+    }
+    for (final i in categories) {
+      realm.add(i, update: true);
+    }
+    for (final i in budgets) {
+      realm.add(i, update: true);
+    }
+    for (final i in goals) {
+      realm.add(i, update: true);
+    }
+    for (final i in products) {
+      realm.add(i, update: true);
+    }
+    // Transactions & stock movements last (reference persons & products).
+    for (final i in transactions) {
+      realm.add(i, update: true);
+    }
+    for (final i in stockMovements) {
+      realm.add(i, update: true);
+    }
+    for (final i in recurring) {
+      realm.add(i, update: true);
+    }
+    for (final i in notifications) {
+      realm.add(i, update: true);
+    }
   }
 
-
-  // --- Serialization Helpers (To Map) ---
   // --- Serialization Helpers (To Map) ---
   Map<String, dynamic> _serializePerson(PersonModel m) => {
-    'uuid': m.id,
-    'name': m.name,
-    'role': m.role,
-    'phone': m.phone,
-    'createdAt': m.createdAt.toIso8601String(),
-    'isArchived': m.isArchived,
-    'currencyCode': m.currencyCode,
-  };
+        'uuid': m.id,
+        'name': m.name,
+        'role': m.role,
+        'phone': m.phone,
+        'createdAt': m.createdAt.toIso8601String(),
+        'isArchived': m.isArchived,
+        'currencyCode': m.currencyCode,
+      };
 
   Map<String, dynamic> _serializeTransaction(TransactionModel m) => {
-    'uuid': m.uuid,
-    'type': m.type,
-    'personId': m.personId,
-    'amount': m.amount,
-    'date': m.date.toIso8601String(),
-    'category': m.category,
-    'note': m.note,
-    'dueDate': m.dueDate?.toIso8601String(),
-    'externalId': m.externalId,
-    'status': m.status,
-    'accountId': m.accountId,
-    'goalId': m.goalId,
-    'isOpeningBalance': m.isOpeningBalance,
-    'currencyCode': m.currencyCode,
-  };
+        'uuid': m.uuid,
+        'type': m.type,
+        'personId': m.personId,
+        'amount': m.amount,
+        'date': m.date.toIso8601String(),
+        'category': m.category,
+        'note': m.note,
+        'dueDate': m.dueDate?.toIso8601String(),
+        'externalId': m.externalId,
+        'status': m.status,
+        'accountId': m.accountId,
+        'goalId': m.goalId,
+        'isOpeningBalance': m.isOpeningBalance,
+        'currencyCode': m.currencyCode,
+      };
 
   Map<String, dynamic> _serializeAccount(FinancialAccountModel m) => {
-    'uuid': m.id.toString(),
-    'name': m.name,
-    'type': m.accountType,
-    'providerId': m.providerId,
-    'balance': m.balance,
-    'currency': m.currency,
-  };
+        'uuid': m.id.toString(),
+        'name': m.name,
+        'type': m.accountType,
+        'providerId': m.providerId,
+        'balance': m.balance,
+        'currency': m.currency,
+      };
 
   Map<String, dynamic> _serializeBudget(BudgetModel m) => {
-    'uuid': m.id.toString(),
-    'category': m.category,
-    'amount': m.amountLimit,
-    'currentSpent': m.currentSpent,
-    'startDate': m.startDate.toIso8601String(),
-    'endDate': m.endDate.toIso8601String(),
-    'isRecurring': m.isRecurring,
-  };
+        'uuid': m.id.toString(),
+        'category': m.category,
+        'amount': m.amountLimit,
+        'currentSpent': m.currentSpent,
+        'startDate': m.startDate.toIso8601String(),
+        'endDate': m.endDate.toIso8601String(),
+        'isRecurring': m.isRecurring,
+      };
 
   Map<String, dynamic> _serializeGoal(SavingsGoalModel m) => {
-    'uuid': m.id.toString(),
-    'name': m.name,
-    'targetAmount': m.targetAmount,
-    'currentAmount': m.currentSaved,
-    'deadline': m.deadline?.toIso8601String(),
-    'icon': m.icon,
-    'color': m.colorHex,
-  };
+        'uuid': m.id.toString(),
+        'name': m.name,
+        'targetAmount': m.targetAmount,
+        'currentAmount': m.currentSaved,
+        'deadline': m.deadline?.toIso8601String(),
+        'icon': m.icon,
+        'color': m.colorHex,
+      };
 
   Map<String, dynamic> _serializeCategory(CategoryModel m) => {
-    'uuid': m.id.toString(),
-    'name': m.name,
-    'type': m.type,
-    'icon': m.iconName,
-    'color': m.colorHex,
-    'isCustom': m.isCustom,
-  };
+        'uuid': m.id.toString(),
+        'name': m.name,
+        'type': m.type,
+        'icon': m.iconName,
+        'color': m.colorHex,
+        'isCustom': m.isCustom,
+      };
 
   Map<String, dynamic> _serializeNotification(NotificationItemModel m) => {
-    'uuid': m.id,
-    'title': m.title,
-    'body': m.body,
-    'date': m.date.toIso8601String(),
-    'isRead': m.isRead,
-    'type': m.type,
-  };
+        'uuid': m.id,
+        'title': m.title,
+        'body': m.body,
+        'date': m.date.toIso8601String(),
+        'isRead': m.isRead,
+        'type': m.type,
+      };
+
+  Map<String, dynamic> _serializeProduct(ProductModel m) => {
+        'uuid': m.id,
+        'name': m.name,
+        'sku': m.sku,
+        'category': m.category,
+        'unit': m.unit,
+        'costPrice': m.costPrice,
+        'salePrice': m.salePrice,
+        'currencyCode': m.currencyCode,
+        'lowStockThreshold': m.lowStockThreshold,
+        'createdAt': m.createdAt.toIso8601String(),
+        'updatedAt': m.updatedAt.toIso8601String(),
+        'isArchived': m.isArchived,
+      };
+
+  Map<String, dynamic> _serializeStockMovement(StockMovementModel m) => {
+        'uuid': m.id,
+        'productId': m.productId,
+        'type': m.type,
+        'quantity': m.quantity,
+        'unitCost': m.unitCost,
+        'personId': m.personId,
+        'transactionId': m.transactionId,
+        'date': m.date.toIso8601String(),
+        'note': m.note,
+        'createdAt': m.createdAt.toIso8601String(),
+      };
 
   // --- Deserialization Helpers (From Map) ---
   PersonModel _deserializePerson(Map<String, dynamic> m) => PersonModel(
-    m['uuid'] ?? Uuid.v4().toString(),
-    m['role'] ?? 'customer',
-    m['name'] ?? 'Unknown',
-    DateTime.tryParse(m['createdAt'] ?? '') ?? DateTime.now(),
-    m['isArchived'] ?? false,
-    phone: m['phone'],
-    currencyCode: m['currencyCode'],
-  );
+        m['uuid']?.toString() ?? const Uuid().v4(),
+        m['role'] ?? 'customer',
+        m['name'] ?? 'Unknown',
+        DateTime.tryParse(m['createdAt'] ?? '') ?? DateTime.now(),
+        m['isArchived'] ?? false,
+        phone: m['phone']?.toString(),
+        currencyCode: m['currencyCode']?.toString(),
+      );
 
-  TransactionModel _deserializeTransaction(Map<String, dynamic> m) => TransactionModel(
-    m['uuid'] ?? Uuid.v4().toString(),
-    m['type'] ?? 'income',
-    (m['amount'] as num).toDouble(),
-    DateTime.tryParse(m['date'] ?? '') ?? DateTime.now(),
-    personId: m['personId'],
-    category: m['category'],
-    note: m['note'],
-    dueDate: m['dueDate'] != null ? DateTime.tryParse(m['dueDate']) : null,
-    externalId: m['externalId'],
-    status: m['status'] ?? 'pending',
-    accountId: m['accountId'],
-    goalId: m['goalId'],
-    isOpeningBalance: m['isOpeningBalance'] ?? false,
-    currencyCode: m['currencyCode'],
-  );
+  TransactionModel _deserializeTransaction(Map<String, dynamic> m) =>
+      TransactionModel(
+        m['uuid']?.toString() ?? const Uuid().v4(),
+        m['type'] ?? 'income',
+        (m['amount'] as num?)?.toDouble() ?? 0.0,
+        DateTime.tryParse(m['date'] ?? '') ?? DateTime.now(),
+        personId: m['personId']?.toString(),
+        category: m['category']?.toString(),
+        note: m['note']?.toString(),
+        dueDate: m['dueDate'] != null ? DateTime.tryParse(m['dueDate']) : null,
+        externalId: m['externalId']?.toString(),
+        status: m['status']?.toString() ?? 'pending',
+        accountId: m['accountId'] is int
+            ? m['accountId'] as int
+            : int.tryParse(m['accountId']?.toString() ?? ''),
+        goalId: m['goalId']?.toString(),
+        isOpeningBalance: m['isOpeningBalance'] ?? false,
+        currencyCode: m['currencyCode']?.toString(),
+      );
 
-  FinancialAccountModel _deserializeAccount(Map<String, dynamic> m) => FinancialAccountModel(
-    int.tryParse(m['uuid']?.toString() ?? '') ?? DateTime.now().millisecondsSinceEpoch,
-    m['name'] ?? 'Account',
-    m['providerId'] ?? 'CASH',
-    m['type'] ?? 'CASH',
-    (m['balance'] as num?)?.toDouble() ?? 0.0,
-    m['currency'] ?? 'SAR',
-  );
+  FinancialAccountModel _deserializeAccount(Map<String, dynamic> m) {
+    // Robust PK resolution: prefer backup uuid, fall back to a *fresh*
+    // monotonic-ish timestamp + random suffix to avoid collisions when
+    // multiple accounts have missing UUIDs.
+    final uuidStr = m['uuid']?.toString();
+    int pk;
+    if (uuidStr != null && uuidStr.isNotEmpty) {
+      pk = int.tryParse(uuidStr) ?? _safeAccountPk();
+    } else {
+      pk = _safeAccountPk();
+    }
+    return FinancialAccountModel(
+      pk,
+      m['name']?.toString() ?? 'Account',
+      m['providerId']?.toString() ?? 'CASH',
+      m['type']?.toString() ?? 'CASH',
+      (m['balance'] as num?)?.toDouble() ?? 0.0,
+      m['currency']?.toString() ?? 'SDG',
+    );
+  }
+
+  /// Generate an account PK that won't collide with another concurrent
+  /// missing-UUID restore: combines the millisecond timestamp with a
+  /// pseudo-random suffix in the lower 4 digits.
+  static int _safeAccountPk() {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final suffix = DateTime.now().microsecond % 10000;
+    return now * 10000 + suffix;
+  }
 
   BudgetModel _deserializeBudget(Map<String, dynamic> m) => BudgetModel(
-    ObjectId.fromHexString(m['uuid'] ?? ObjectId().hexString),
-    m['category'] ?? 'General',
-    (m['amount'] as num).toDouble(),
-    (m['currentSpent'] as num?)?.toDouble() ?? 0.0,
-    DateTime.tryParse(m['startDate'] ?? '') ?? DateTime.now(),
-    DateTime.tryParse(m['endDate'] ?? '') ?? DateTime.now(),
-    isRecurring: m['isRecurring'] ?? true,
-  );
+        ObjectId.fromHexString(m['uuid']?.toString() ?? ObjectId().hexString),
+        m['category']?.toString() ?? 'General',
+        (m['amount'] as num?)?.toDouble() ?? 0.0,
+        (m['currentSpent'] as num?)?.toDouble() ?? 0.0,
+        DateTime.tryParse(m['startDate'] ?? '') ?? DateTime.now(),
+        DateTime.tryParse(m['endDate'] ?? '') ?? DateTime.now(),
+        isRecurring: m['isRecurring'] ?? true,
+      );
 
   SavingsGoalModel _deserializeGoal(Map<String, dynamic> m) => SavingsGoalModel(
-    ObjectId.fromHexString(m['uuid'] ?? ObjectId().hexString),
-    m['name'] ?? 'Goal',
-    (m['targetAmount'] as num).toDouble(),
-    (m['currentAmount'] as num?)?.toDouble() ?? 0.0,
-    deadline: m['deadline'] != null ? DateTime.tryParse(m['deadline']) : null,
-    icon: m['icon'] ?? 'target',
-    colorHex: m['color']?.toString() ?? '0xFF000000',
-  );
+        ObjectId.fromHexString(m['uuid']?.toString() ?? ObjectId().hexString),
+        m['name']?.toString() ?? 'Goal',
+        (m['targetAmount'] as num?)?.toDouble() ?? 0.0,
+        (m['currentAmount'] as num?)?.toDouble() ?? 0.0,
+        deadline: m['deadline'] != null ? DateTime.tryParse(m['deadline']) : null,
+        icon: m['icon']?.toString() ?? 'target',
+        colorHex: m['color']?.toString() ?? '0xFF000000',
+      );
 
   CategoryModel _deserializeCategory(Map<String, dynamic> m) => CategoryModel(
-    ObjectId.fromHexString(m['uuid'] ?? ObjectId().hexString),
-    m['name'] ?? 'Category',
-    m['icon'] ?? 'tag',
-    m['color']?.toString() ?? '0xFF000000',
-    m['type'] ?? 'expense',
-    m['isCustom'] ?? false,
-  );
+        ObjectId.fromHexString(m['uuid']?.toString() ?? ObjectId().hexString),
+        m['name']?.toString() ?? 'Category',
+        m['icon']?.toString() ?? 'tag',
+        m['color']?.toString() ?? '0xFF000000',
+        m['type']?.toString() ?? 'expense',
+        m['isCustom'] ?? false,
+      );
 
-  NotificationItemModel _deserializeNotification(Map<String, dynamic> m) => NotificationItemModel(
-    m['uuid'] ?? Uuid.v4().toString(),
-    m['title'] ?? '',
-    m['body'] ?? '',
-    DateTime.tryParse(m['date'] ?? '') ?? DateTime.now(),
-    m['isRead'] ?? false,
-    m['type'] ?? 'info',
-  );
+  NotificationItemModel _deserializeNotification(Map<String, dynamic> m) =>
+      NotificationItemModel(
+        m['uuid']?.toString() ?? const Uuid().v4(),
+        m['title']?.toString() ?? '',
+        m['body']?.toString() ?? '',
+        DateTime.tryParse(m['date'] ?? '') ?? DateTime.now(),
+        m['isRead'] ?? false,
+        m['type']?.toString() ?? 'info',
+      );
 
+  ProductModel _deserializeProduct(Map<String, dynamic> m) => ProductModel(
+        m['uuid']?.toString() ?? const Uuid().v4(),
+        m['name']?.toString() ?? 'Product',
+        DateTime.tryParse(m['createdAt'] ?? '') ?? DateTime.now(),
+        DateTime.tryParse(m['updatedAt'] ?? '') ?? DateTime.now(),
+        isArchived: m['isArchived'] ?? false,
+        sku: m['sku']?.toString(),
+        category: m['category']?.toString(),
+        unit: m['unit']?.toString(),
+        costPrice: (m['costPrice'] as num?)?.toDouble(),
+        salePrice: (m['salePrice'] as num?)?.toDouble(),
+        currencyCode: m['currencyCode']?.toString(),
+        lowStockThreshold: (m['lowStockThreshold'] as num?)?.toDouble(),
+      );
+
+  StockMovementModel _deserializeStockMovement(Map<String, dynamic> m) =>
+      StockMovementModel(
+        m['uuid']?.toString() ?? const Uuid().v4(),
+        m['productId']?.toString() ?? '',
+        m['type']?.toString() ?? 'inbound',
+        (m['quantity'] as num?)?.toDouble() ?? 0.0,
+        DateTime.tryParse(m['date'] ?? '') ?? DateTime.now(),
+        DateTime.tryParse(m['createdAt'] ?? '') ?? DateTime.now(),
+        unitCost: (m['unitCost'] as num?)?.toDouble(),
+        personId: m['personId']?.toString(),
+        transactionId: m['transactionId']?.toString(),
+        note: m['note']?.toString(),
+      );
+
+  Map<String, dynamic> _serializeRecurring(RecurringTransactionModel m) => {
+        'uuid': m.id,
+        'type': m.type,
+        'amount': m.amount,
+        'personId': m.personId,
+        'category': m.category,
+        'note': m.note,
+        'currencyCode': m.currencyCode,
+        'frequency': m.frequency,
+        'startDate': m.startDate.toIso8601String(),
+        'endDate': m.endDate?.toIso8601String(),
+        'nextRunDate': m.nextRunDate.toIso8601String(),
+        'occurrencesGenerated': m.occurrencesGenerated,
+        'isPaused': m.isPaused,
+        'createdAt': m.createdAt.toIso8601String(),
+        'updatedAt': m.updatedAt?.toIso8601String(),
+      };
+
+  RecurringTransactionModel _deserializeRecurring(Map<String, dynamic> m) =>
+      RecurringTransactionModel(
+        m['uuid']?.toString() ?? const Uuid().v4(),
+        m['type']?.toString() ?? 'cashExpense',
+        (m['amount'] as num?)?.toDouble() ?? 0.0,
+        m['frequency']?.toString() ?? 'monthly',
+        DateTime.tryParse(m['startDate'] ?? '') ?? DateTime.now(),
+        DateTime.tryParse(m['nextRunDate'] ?? '') ?? DateTime.now(),
+        DateTime.tryParse(m['createdAt'] ?? '') ?? DateTime.now(),
+        personId: m['personId']?.toString(),
+        category: m['category']?.toString(),
+        note: m['note']?.toString(),
+        currencyCode: m['currencyCode']?.toString(),
+        endDate: m['endDate'] != null ? DateTime.tryParse(m['endDate']) : null,
+        occurrencesGenerated: (m['occurrencesGenerated'] as num?)?.toInt() ?? 0,
+        isPaused: m['isPaused'] ?? false,
+        updatedAt: m['updatedAt'] != null ? DateTime.tryParse(m['updatedAt']) : null,
+      );
 
   // --- Encryption Logic (Isolate) ---
   static String _encryptData(_EncryptionParams params) {
     final salt = enc.IV.fromSecureRandom(_saltLength);
-    final key = enc.Key.fromUtf8(params.password).stretch(_keyLength, salt: salt.bytes, iterationCount: _iterationCount);
+    final key = enc.Key.fromUtf8(params.password).stretch(
+      _keyLength,
+      salt: salt.bytes,
+      iterationCount: _iterationCount,
+    );
     final iv = enc.IV.fromSecureRandom(_ivLength);
     final encrypter = enc.Encrypter(enc.AES(key));
-    
+
     final encrypted = encrypter.encrypt(params.jsonString, iv: iv);
-    
+
     final output = {
       'isEncrypted': true,
       'salt': salt.base64,
@@ -383,10 +617,14 @@ class BackupService {
     final salt = enc.IV.fromBase64(data['salt']);
     final iv = enc.IV.fromBase64(data['iv']);
     final encrypted = enc.Encrypted.fromBase64(data['data']);
-    
-    final key = enc.Key.fromUtf8(params.password).stretch(_keyLength, salt: salt.bytes, iterationCount: _iterationCount);
+
+    final key = enc.Key.fromUtf8(params.password).stretch(
+      _keyLength,
+      salt: salt.bytes,
+      iterationCount: _iterationCount,
+    );
     final encrypter = enc.Encrypter(enc.AES(key));
-    
+
     return encrypter.decrypt(encrypted, iv: iv);
   }
 }

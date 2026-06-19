@@ -24,19 +24,28 @@ class CashbookState {
   });
 }
 
-final cashFilterProvider = StateProvider<CashFilter>((ref) => CashFilter.all);
+final cashFilterProvider =
+    StateProvider<CashFilter>((ref) => CashFilter.all);
 
-/// Provider for date range preset selection
-final dateRangePresetProvider = StateProvider<DateRangePreset>((ref) => DateRangePreset.all);
+/// Provider for date range preset selection.
+/// Kept non-autoDispose so deep-links from the Home screen
+/// (which set the filter before navigating) work correctly.
+final dateRangePresetProvider =
+    StateProvider<DateRangePreset>((ref) => DateRangePreset.all);
 
-/// Search query provider for cashbook transaction filtering
-final cashbookSearchProvider = StateProvider<String>((ref) => '');
+/// Search query provider for cashbook transaction filtering.
+/// AutoDispose — search state should not leak across sessions.
+final cashbookSearchProvider =
+    StateProvider.autoDispose<String>((ref) => '');
 
-/// Provider for custom date range (used when preset is 'custom')
-final customDateRangeProvider = StateProvider<DateTimeRange?>((ref) => null);
+/// Provider for custom date range (used when preset is 'custom').
+/// AutoDispose so an old custom range doesn't persist when the user leaves.
+final customDateRangeProvider =
+    StateProvider.autoDispose<DateTimeRange?>((ref) => null);
 
 /// Computed date range based on preset or custom selection
-final activeDateRangeProvider = Provider<DateTimeRange?>((ref) {
+final activeDateRangeProvider =
+    Provider.autoDispose<DateTimeRange?>((ref) {
   final preset = ref.watch(dateRangePresetProvider);
   final customRange = ref.watch(customDateRangeProvider);
   

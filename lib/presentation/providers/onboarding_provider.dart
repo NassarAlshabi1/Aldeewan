@@ -1,11 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:aldeewan_mobile/data/services/onboarding_service.dart';
+import 'package:aldeewan_mobile/presentation/providers/dependency_injection.dart';
 
-/// Provider for SharedPreferences instance
-final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
-  throw UnimplementedError('sharedPreferencesProvider must be overridden');
-});
+/// `sharedPreferencesProvider` is now canonically defined in
+/// `dependency_injection.dart` (overridden in main()).
 
 /// Provider for OnboardingService
 final onboardingServiceProvider = Provider<OnboardingService>((ref) {
